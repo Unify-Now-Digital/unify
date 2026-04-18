@@ -357,7 +357,7 @@ window.CONTENT = {
     sub: 'We come to the workshop, run last week\u2019s inbox through Mason in front of you, and leave you the file. You decide if it earns its keep.',
     primary: { label: 'Book a workshop demo', href: '#demo' },
     secondary: { label: 'Email us a sample inbox', href: '#email' },
-    contact: 'hello@unifynow.digital',
+    contact: 'admin@unifynow.digital',
   },
   footer: {
     parent: 'A product of Unify Digital',
@@ -1090,41 +1090,140 @@ window.FAQ = function FAQ() {
 
 window.CTASection = function CTASection() {
   const c = CONTENT.cta;
+  const [status, setStatus] = useState('idle'); // idle | sending | ok | err
+  const [err, setErr] = useState('');
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    // honeypot — bots fill hidden field
+    if (data.get('_honey')) return;
+    setStatus('sending'); setErr('');
+    try {
+      const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(c.contact)}`, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        body: data,
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      if (json.success === 'true' || json.success === true) {
+        setStatus('ok'); form.reset();
+      } else {
+        throw new Error(json.message || 'Submission failed');
+      }
+    } catch (e2) {
+      setStatus('err'); setErr(e2.message || 'Something went wrong');
+    }
+  };
+
+  const inputStyle = {
+    width: '100%', padding: '12px 14px', borderRadius: 8,
+    background: 'rgba(255,255,255,0.12)', color: '#fff',
+    border: '1px solid rgba(255,255,255,0.28)',
+    fontFamily: 'inherit', fontSize: 14, outline: 'none',
+  };
+  const labelStyle = {
+    display: 'block', fontSize: 11, fontFamily: 'var(--ff-mono)',
+    fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.75)', marginBottom: 6,
+  };
+
   return (
     <section id="demo" style={{
       padding: '110px 0', position: 'relative', overflow: 'hidden',
       background: 'var(--c-acc)', color: '#fff',
     }}>
-      <div className="wrap" style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 60, alignItems: 'center' }} className="grid-3-2">
+      <div className="wrap" style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 60, alignItems: 'flex-start' }} className="grid-3-2">
         <div>
           <div className="eyebrow" style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 14 }}>{c.eyebrow}</div>
           <h2 className="ff-display" style={{ margin: 0, fontSize: 'clamp(34px, 4.5vw, 56px)', lineHeight: 1.04, letterSpacing: '-0.022em', fontWeight: 500, color: '#fff', textWrap: 'balance' }}>
             {c.title}
           </h2>
           <p style={{ marginTop: 20, fontSize: 17, color: 'rgba(255,255,255,0.85)', lineHeight: 1.55, maxWidth: 520 }}>{c.sub}</p>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <a href="#book" style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '18px 24px', borderRadius: 10, background: '#fff', color: 'var(--c-acc-dk)',
-            fontSize: 16, fontWeight: 600,
-          }}>
-            {c.primary.label} <SiteIcon name="arrowRight" size={18}/>
-          </a>
-          <a href={`mailto:${c.contact}`} style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '18px 24px', borderRadius: 10, background: 'rgba(255,255,255,0.12)', color: '#fff',
-            fontSize: 16, fontWeight: 600, border: '1px solid rgba(255,255,255,0.25)',
-          }}>
-            {c.secondary.label} <SiteIcon name="mail" size={18}/>
-          </a>
-          <div className="ff-mono" style={{ marginTop: 6, fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
-            or call us · 0117 422 0188
+          <div className="ff-mono" style={{ marginTop: 28, fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>
+            <div>or email <a href={`mailto:${c.contact}`} style={{ color: '#fff', textDecoration: 'underline' }}>{c.contact}</a></div>
+            <div style={{ marginTop: 6 }}>or call us · 0117 422 0188</div>
           </div>
         </div>
+        <form id="book" onSubmit={onSubmit}
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.22)',
+                borderRadius: 12, padding: 24,
+                display: 'flex', flexDirection: 'column', gap: 14,
+              }}>
+          <input type="hidden" name="_subject" value="Mason — new demo request" />
+          <input type="hidden" name="_template" value="table" />
+          <input type="hidden" name="_captcha" value="false" />
+          <input type="text" name="_honey" tabIndex={-1} autoComplete="off"
+                 style={{ position: 'absolute', left: '-9999px', opacity: 0 }} aria-hidden="true" />
+
+          <div>
+            <label htmlFor="cf-name" style={labelStyle}>Your name</label>
+            <input id="cf-name" name="name" type="text" required style={inputStyle} placeholder="Aylin Tekin" />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }} className="form-row">
+            <div>
+              <label htmlFor="cf-email" style={labelStyle}>Email</label>
+              <input id="cf-email" name="email" type="email" required style={inputStyle} placeholder="you@workshop.co.uk" />
+            </div>
+            <div>
+              <label htmlFor="cf-workshop" style={labelStyle}>Workshop</label>
+              <input id="cf-workshop" name="workshop" type="text" style={inputStyle} placeholder="Thornton & Vale" />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="cf-message" style={labelStyle}>What would you like to see?</label>
+            <textarea id="cf-message" name="message" rows={3} style={{ ...inputStyle, resize: 'vertical', minHeight: 80 }}
+                      placeholder="Happy to run your last week's inbox through Mason." />
+          </div>
+
+          <button type="submit" disabled={status === 'sending'}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '14px 20px', borderRadius: 10, border: 'none',
+                    background: '#fff', color: 'var(--c-acc-dk)',
+                    fontFamily: 'inherit', fontSize: 15, fontWeight: 600,
+                    cursor: status === 'sending' ? 'wait' : 'pointer',
+                    opacity: status === 'sending' ? 0.7 : 1,
+                  }}>
+            {status === 'sending' ? 'Sending…' : c.primary.label}
+            <SiteIcon name="arrowRight" size={16}/>
+          </button>
+
+          {status === 'ok' && (
+            <div className="fade-up" style={{
+              fontSize: 13, color: '#fff', background: 'rgba(255,255,255,0.14)',
+              border: '1px solid rgba(255,255,255,0.3)', borderRadius: 8, padding: '10px 12px',
+            }}>
+              Thanks — we'll be in touch within a working day.
+            </div>
+          )}
+          {status === 'err' && (
+            <div style={{
+              fontSize: 13, color: '#fff', background: 'rgba(0,0,0,0.22)',
+              border: '1px solid rgba(255,255,255,0.3)', borderRadius: 8, padding: '10px 12px',
+            }}>
+              Couldn't send — {err}. Please email <a href={`mailto:${c.contact}`} style={{ color: '#fff', textDecoration: 'underline' }}>{c.contact}</a>.
+            </div>
+          )}
+          <div className="ff-mono" style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.65)', letterSpacing: '0.04em' }}>
+            Delivered to {c.contact}. We reply personally — no sequences.
+          </div>
+        </form>
       </div>
       <style>{`
-        @media (max-width: 900px) { .grid-3-2 { grid-template-columns: 1fr !important; gap: 32px !important; } }
+        @media (max-width: 900px) {
+          .grid-3-2 { grid-template-columns: 1fr !important; gap: 32px !important; }
+          .form-row { grid-template-columns: 1fr !important; }
+        }
+        #demo input::placeholder, #demo textarea::placeholder { color: rgba(255,255,255,0.55); }
+        #demo input:focus, #demo textarea:focus {
+          border-color: rgba(255,255,255,0.7) !important;
+          background: rgba(255,255,255,0.18) !important;
+        }
       `}</style>
     </section>
   );
