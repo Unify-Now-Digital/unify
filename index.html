@@ -1,0 +1,1923 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mason — Workflow software for memorial masons</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Mason brand tokens — pulled from the app */
+    --c-ink:      #1A1815;
+    --c-ink-2:    #3A332A;
+    --c-mute:     #7A7060;
+    --c-mute-2:   #A89A86;
+    --c-page:     #F2EEE5;
+    --c-paper:    #FDFBF6;
+    --c-paper-2:  #FFFFFF;
+    --c-line:     #DED9CE;
+    --c-line-2:   #C8BCA8;
+    --c-deep:     #243D2E;     /* sidebar green */
+    --c-deep-2:   #1A2D22;
+    --c-acc:      #C2693B;     /* terracotta */
+    --c-acc-lt:   #F5E8DC;
+    --c-acc-dk:   #8A3A18;
+    --c-grn:      #4A8A62;
+    --c-blu:      #3A6A9A;
+    --c-amb:      #C2693B;
+
+    --ff-serif:   'Lora', Georgia, serif;
+    --ff-display: 'Fraunces', 'Lora', Georgia, serif;
+    --ff-script:  'Instrument Serif', 'Lora', Georgia, serif;
+    --ff-body:    'DM Sans', -apple-system, system-ui, sans-serif;
+    --ff-mono:    'JetBrains Mono', ui-monospace, monospace;
+
+    --radius:     10px;
+    --radius-sm:  6px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body {
+    font-family: var(--ff-body);
+    background: var(--c-page);
+    color: var(--c-ink);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+  }
+  a { color: inherit; text-decoration: none; }
+  img { max-width: 100%; display: block; }
+
+  /* paper grain */
+  .grain {
+    background-image:
+      radial-gradient(rgba(122,112,96,0.05) 1px, transparent 1px),
+      radial-gradient(rgba(122,112,96,0.03) 1px, transparent 1px);
+    background-size: 24px 24px, 7px 7px;
+    background-position: 0 0, 12px 12px;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(122,112,96,0.25); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(122,112,96,0.4); }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  /* focus */
+  button:focus-visible, a:focus-visible {
+    outline: 2px solid var(--c-acc);
+    outline-offset: 2px;
+  }
+
+  /* container */
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 32px; }
+  @media (max-width: 720px) { .wrap { padding: 0 20px; } }
+
+  /* type utilities */
+  .ff-serif   { font-family: var(--ff-serif); }
+  .ff-display { font-family: var(--ff-display); }
+  .ff-script  { font-family: var(--ff-script); }
+  .ff-body    { font-family: var(--ff-body); }
+  .ff-mono    { font-family: var(--ff-mono); }
+
+  /* eyebrow */
+  .eyebrow {
+    font-family: var(--ff-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--c-mute);
+  }
+
+  /* shimmer for AI dots */
+  @keyframes aiPulse { 0%,100% { opacity: .55 } 50% { opacity: 1 } }
+  .ai-dot { animation: aiPulse 2.2s ease-in-out infinite; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { animation: fadeUp .5s ease-out both; }
+
+  /* tick mark for lists */
+  .ticks li {
+    position: relative; padding-left: 26px; margin-bottom: 10px;
+    list-style: none; font-size: 15px; color: var(--c-ink-2);
+  }
+  .ticks li::before {
+    content: ''; position: absolute; left: 4px; top: 9px;
+    width: 12px; height: 6px; border-left: 1.6px solid var(--c-acc);
+    border-bottom: 1.6px solid var(--c-acc); transform: rotate(-45deg);
+  }
+  .ticks { padding: 0; margin: 0; }
+
+  /* hr */
+  .rule { border: none; border-top: 1px solid var(--c-line); margin: 0; }
+
+  /* placeholder helper used when we don't have real assets */
+  .placeholder-img {
+    background:
+      repeating-linear-gradient(
+        135deg,
+        rgba(122,112,96,0.08) 0 12px,
+        rgba(122,112,96,0.04) 12px 24px
+      ),
+      var(--c-paper);
+    border: 1px solid var(--c-line);
+    color: var(--c-mute);
+    font-family: var(--ff-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-sm);
+  }
+
+  /* keep things crisp on hi-dpi */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<!-- Tweakable defaults -->
+<script>
+  window.__TWEAKS__ = /*EDITMODE-BEGIN*/{
+    "direction": "workshop",
+    "showAppPreview": true,
+    "darkFooter": true,
+    "showNumbers": true
+  }/*EDITMODE-END*/;
+</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+
+// ===== src/content.jsx =====
+// All marketing copy in one place — easy to revise.
+
+window.CONTENT = {
+  brand: {
+    product: 'Mason',
+    parent: 'Unify',
+    tagline: 'Workflow software for memorial masons.',
+    domain: 'unifynow.digital',
+  },
+  nav: [
+    { label: 'Workflows', href: '#workflows' },
+    { label: 'How it fits', href: '#how' },
+    { label: 'Pricing', href: '#pricing' },
+    { label: 'For workshops', href: '#workshops' },
+    { label: 'Journal', href: '#journal' },
+  ],
+  hero: {
+    eyebrow: 'For UK memorial masons',
+    headlineLead: 'Less paperwork.',
+    headlineMain: 'More time at the bench.',
+    sub: 'Mason is the quiet office manager that drafts your enquiries, proofs your inscriptions, and chases your permits — so the workshop can carry on cutting stone.',
+    primary: { label: 'Book a workshop demo', href: '#demo' },
+    secondary: { label: 'See it work', href: '#workflows' },
+    proofPoints: [
+      { value: '−4.2 days', label: 'avg. enquiry to quote' },
+      { value: '92%', label: 'enquiries auto-drafted' },
+      { value: '3.4 d', label: 'time to first proof' },
+    ],
+  },
+  trust: {
+    label: 'Built with these workshops',
+    logos: ['Thornton & Vale', 'Penrose Stone Co.', 'Alfred & Sons', 'Whitby Memorials', 'Haycombe Mason Co.', 'Briggs & Field'],
+  },
+  workflows: {
+    eyebrow: 'Three windows. One quiet office.',
+    title: 'Mason runs the parts of the day that don\u2019t want to be done.',
+    sub: 'Each AI workflow handles one painful loop: the inbound message, the proof going out, the permit going through. You stay in charge — Mason just gets it ready.',
+    items: [
+      {
+        n: '01',
+        kicker: 'Enquiry Triage',
+        title: 'Reads every enquiry. Drafts the order.',
+        body: 'Email, WhatsApp, SMS — Mason parses what came in, extracts the customer, the cemetery, the inscription if there is one, and lays out a draft order alongside the original message. Every field links back to the line it came from. You approve, or edit.',
+        bullets: [
+          'High\u2011confidence drafts you can approve in bulk',
+          'Knows when a message belongs to an existing order',
+          'Flags missing inscriptions, callbacks, trade accounts',
+        ],
+        stat: { value: '47m', label: 'time to first response, down from 4h 30m' },
+      },
+      {
+        n: '02',
+        kicker: 'Proof Review',
+        title: 'Catches the typo before the family does.',
+        body: 'Mason checks every proof against the brief, the customer\u2019s correspondence, the house style, and the cemetery\u2019s regulations. It surfaces the dash that\u2019s wrong, the date that doesn\u2019t match, the height the council won\u2019t allow.',
+        bullets: [
+          'Cross\u2011references dates, names, and quotes against the thread',
+          'House\u2011style enforcement (em\u2011dash, capitalisation, apostrophes)',
+          'Per\u2011cemetery rules: height, materials, wording',
+        ],
+        stat: { value: '1.8', label: 'avg. versions per proof, down from 2.6' },
+      },
+      {
+        n: '03',
+        kicker: 'Permit Chase',
+        title: 'The paperwork never goes quiet again.',
+        body: 'Mason matches each order to the right permit form, posts it to the family, chases the council, and watches the dwell\u2011time on every stage. No more permits sitting on a desk for thirty days because nobody asked.',
+        bullets: [
+          'Per\u2011council form library, kept up to date',
+          'Per\u2011stage SLAs with quiet weekly chases',
+          'A single board for everything in flight',
+        ],
+        stat: { value: '−18 days', label: 'median permit cycle for repeat cemeteries' },
+      },
+    ],
+  },
+  how: {
+    eyebrow: 'How it fits the workshop',
+    title: 'Built around how a small mason actually works.',
+    sub: 'Mason isn\u2019t a CRM and it isn\u2019t a project tool. It\u2019s shaped to the loop a memorial workshop runs every week: enquiry, quote, proof, permit, install, invoice. It plugs into the inbox and the calendar you already have.',
+    pillars: [
+      {
+        kicker: 'Office',
+        title: 'A single hub for the week',
+        body: 'Pipeline, KPIs, the ribbon at the top of the screen tells you the median days saved. The office manager runs their morning from one screen.',
+      },
+      {
+        kicker: 'Workshop',
+        title: 'Work cards, not project plans',
+        body: 'Each order is a card with the brief, the proof, the permit status, the install slot. The crew sees the day. Nobody learns Gantt charts.',
+      },
+      {
+        kicker: 'Family',
+        title: 'Replies that sound like you',
+        body: 'Mason drafts in the workshop\u2019s voice, with the workshop\u2019s names. Every customer\u2011facing message is approved by a person before it goes.',
+      },
+    ],
+  },
+  metrics: {
+    eyebrow: 'Real numbers from a real workshop',
+    title: 'Thornton & Vale ran Mason for one quarter.',
+    sub: 'A four\u2011mason workshop in Bristol. Same staff, same volume, same sites. Here\u2019s what changed.',
+    rows: [
+      { label: 'Avg. enquiry → quote',           before: '6.4 d',  after: '2.2 d',  delta: '−4.2 d' },
+      { label: 'Avg. time to first proof',       before: '5.4 d',  after: '3.4 d',  delta: '−2.0 d' },
+      { label: 'Avg. versions per proof',        before: '2.6',    after: '1.8',    delta: '−0.8' },
+      { label: 'Permit cycle (repeat cemetery)', before: '42 d',   after: '24 d',   delta: '−18 d' },
+      { label: 'Office hours / week',            before: '34 h',   after: '19 h',   delta: '−15 h' },
+      { label: 'Conversion (enquiry → order)',   before: '58%',    after: '64%',    delta: '+6 pt' },
+    ],
+  },
+  testimonial: {
+    quote: 'Mason isn\u2019t the loud kind of software. It quietly removes the bits of the week the workshop dreaded \u2014 the inbox at half eight, the second proof, the council that never replies. We just get on with the stone.',
+    name: 'Aylin Tekin',
+    role: 'Office Manager, Thornton & Vale Memorials',
+    location: 'Bristol',
+  },
+  pricing: {
+    eyebrow: 'Pricing',
+    title: 'Per workshop. Not per seat.',
+    sub: 'A small workshop pays once. The whole crew uses it. No add\u2011ons, no per\u2011message charges, no surprises at the end of the month.',
+    plans: [
+      {
+        name: 'Bench',
+        for: 'Solo masons & 2\u2011person workshops',
+        price: '£89',
+        per: '/ month',
+        features: [
+          'Enquiry Triage',
+          'Proof Review',
+          'Up to 40 active orders',
+          'Email + WhatsApp inbox',
+          'House\u2011style library',
+        ],
+      },
+      {
+        name: 'Workshop',
+        for: 'Established workshops, 3\u201312 staff',
+        price: '£249',
+        per: '/ month',
+        featured: true,
+        features: [
+          'Everything in Bench',
+          'Permit Chase + form library',
+          'Logistics planner & install board',
+          'Finance: invoicing & balance chase',
+          'Unlimited active orders',
+          'Connect Xero, Google Drive',
+        ],
+      },
+      {
+        name: 'Trade',
+        for: 'Multi\u2011site & funeral\u2011trade suppliers',
+        price: 'Talk to us',
+        per: '',
+        features: [
+          'Everything in Workshop',
+          'Trade accounts & price lists',
+          'Multi\u2011site dashboards',
+          'SSO + per\u2011branch reporting',
+          'Custom integrations',
+        ],
+      },
+    ],
+  },
+  faq: [
+    {
+      q: 'Will the families know it\u2019s AI writing to them?',
+      a: 'No \u2014 nothing customer\u2011facing is sent without a person approving it. Mason drafts in your workshop\u2019s voice, signs with your name, and waits for you to press send.',
+    },
+    {
+      q: 'We already use Xero / Google Drive / a particular CRM. Will it fit?',
+      a: 'Yes. Mason connects to Xero for invoicing, Google Drive for permit forms and proofs, and any IMAP inbox. We don\u2019t replace what works; we close the gaps between them.',
+    },
+    {
+      q: 'What about the cemetery\u2011specific rules?',
+      a: 'We maintain a library of regulations for the cemeteries our workshops actually use \u2014 Arnos Vale, Haycombe, Canford, Westbury\u2011on\u2011Trym, Kendal and dozens more. If yours isn\u2019t in there, we add it.',
+    },
+    {
+      q: 'How long is onboarding?',
+      a: 'Most workshops are running their inbox through Mason inside a week. The Permit module takes a fortnight \u2014 we set up the cemetery library with you, then it runs itself.',
+    },
+    {
+      q: 'Is it built for the UK memorial trade specifically?',
+      a: 'Yes. We work with masons in the South West, Cumbria, and the Welsh borders. The vocabulary, the regulations, the BRAMM standards \u2014 it\u2019s built around the trade, not retrofitted from generic CRM software.',
+    },
+  ],
+  cta: {
+    eyebrow: 'See it on your own enquiries',
+    title: 'A demo at your bench, not a sales call.',
+    sub: 'We come to the workshop, run last week\u2019s inbox through Mason in front of you, and leave you the file. You decide if it earns its keep.',
+    primary: { label: 'Book a workshop demo', href: '#demo' },
+    secondary: { label: 'Email us a sample inbox', href: '#email' },
+    contact: 'hello@unifynow.digital',
+  },
+  footer: {
+    parent: 'A product of Unify Digital',
+    cols: [
+      { title: 'Product', links: ['Enquiry Triage', 'Proof Review', 'Permit Chase', 'Logistics', 'Finance', 'Hub'] },
+      { title: 'Workshop', links: ['Pricing', 'Onboarding', 'Cemetery library', 'Integrations', 'Changelog'] },
+      { title: 'Company', links: ['About Unify', 'Journal', 'Press kit', 'Trade enquiries', 'Contact'] },
+      { title: 'Trust', links: ['Security', 'BRAMM compliance', 'Privacy', 'Terms', 'Status'] },
+    ],
+    address: 'Unify Digital Ltd. \u00b7 The Old Stoneworks, Bristol BS3 \u00b7 Reg. 14820318',
+    note: 'Built quietly in Bristol, for the workshops we know.',
+  },
+};
+
+
+// ===== src/icons.jsx =====
+// Inline SVG icons used across the site.
+
+window.SiteIcon = function SiteIcon({ name, size = 16, stroke = 1.6, color }) {
+  const c = color || 'currentColor';
+  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: c, strokeWidth: stroke, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  const i = {
+    arrowRight: <><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14,6 20,12 14,18"/></>,
+    check:      <polyline points="4,12 10,18 20,7"/>,
+    spark:      <><path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2"/></>,
+    inbox:      <><path d="M3 13l3-7h12l3 7v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 13h5l1 2h6l1-2h5"/></>,
+    pen:        <><path d="M4 20l1-4 11-11 3 3-11 11-4 1z"/><line x1="14" y1="7" x2="17" y2="10"/></>,
+    stamp:      <><circle cx="12" cy="9" r="4"/><line x1="6" y1="20" x2="18" y2="20"/><line x1="12" y1="13" x2="12" y2="20"/></>,
+    flame:      <path d="M12 3s4 4 4 8a4 4 0 0 1-8 0c0-1 .5-2 1-3 0 2 1 3 2 3-1-3 1-5 1-8z"/>,
+    truck:      <><rect x="2" y="7" width="12" height="10" rx="1"/><polyline points="14,10 18,10 22,14 22,17 14,17"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></>,
+    coins:      <><ellipse cx="9" cy="7" rx="6" ry="3"/><path d="M3 7v4c0 1.7 2.7 3 6 3s6-1.3 6-3V7"/><path d="M9 14v3c0 1.7 2.7 3 6 3s6-1.3 6-3v-4"/><ellipse cx="15" cy="13" rx="6" ry="3"/></>,
+    chevDown:   <polyline points="6,9 12,16 18,9"/>,
+    plus:       <><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>,
+    minus:      <line x1="5" y1="12" x2="19" y2="12"/>,
+    quote:      <><path d="M7 7c-2 1-3 3-3 6v4h6v-6H6c0-1 1-2 2-3z"/><path d="M17 7c-2 1-3 3-3 6v4h6v-6h-4c0-1 1-2 2-3z"/></>,
+    chisel:     <><path d="M5 19l4-4 7-7-4-4-7 7-4 4z"/><line x1="12" y1="8" x2="16" y2="12"/></>,
+    stone:      <><path d="M6 21V8a6 6 0 0 1 12 0v13"/><line x1="4" y1="21" x2="20" y2="21"/></>,
+    sparkle:    <path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>,
+    grid:       <><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></>,
+    play:       <polygon points="6,4 20,12 6,20"/>,
+    sliders:    <><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></>,
+    arrow:      <><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13,6 19,12 13,18"/></>,
+    download:   <><path d="M12 4v12"/><polyline points="6,10 12,16 18,10"/><line x1="4" y1="20" x2="20" y2="20"/></>,
+    mail:       <><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3,7 12,13 21,7"/></>,
+    whatsapp:   <><path d="M3 21l1.5-5a8 8 0 1 1 3 3z"/></>,
+    phone:      <path d="M5 4h3l2 5-2 1a11 11 0 0 0 6 6l1-2 5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 3 6a2 2 0 0 1 2-2z"/>,
+    link:       <><path d="M9 15l6-6"/><path d="M14 6l1.5-1.5a4 4 0 1 1 6 6L20 12"/><path d="M10 18l-1.5 1.5a4 4 0 1 1-6-6L4 12"/></>,
+    star:       <polygon points="12,3 14.5,9.5 21,10 16,14.5 17.5,21 12,17.5 6.5,21 8,14.5 3,10 9.5,9.5"/>,
+  };
+  return <svg {...common}>{i[name] || null}</svg>;
+};
+
+// Mason mark — cribbed from app sidebar (simple stone arch)
+window.MasonMark = function MasonMark({ size = 28, color }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke={color || 'currentColor'} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 21V11a8 8 0 0 1 16 0v10"/>
+      <line x1="3" y1="21" x2="21" y2="21"/>
+    </svg>
+  );
+};
+
+
+// ===== src/app-preview.jsx =====
+// A miniature, static-but-realistic Mason UI snapshot used as the hero product shot.
+// Lifts the visual vocabulary from the actual app: deep green sidebar, paper page,
+// terracotta accent, Lora headings, mono data.
+
+window.MasonAppPreview = function MasonAppPreview({ scale = 1, view = 'enquiries', shadow = true }) {
+  const VIEWS = {
+    enquiries: <PreviewEnquiries />,
+    proofs:    <PreviewProofs />,
+    permits:   <PreviewPermits />,
+  };
+  return (
+    <div style={{
+      position: 'relative',
+      width: 1080, height: 660,
+      transformOrigin: 'top left',
+      transform: `scale(${scale})`,
+      borderRadius: 14,
+      overflow: 'hidden',
+      background: 'var(--c-page)',
+      border: '1px solid var(--c-line-2)',
+      boxShadow: shadow ? '0 30px 60px -28px rgba(40,32,18,0.35), 0 8px 20px -10px rgba(40,32,18,0.18)' : 'none',
+      fontFamily: 'var(--ff-body)',
+      color: 'var(--c-ink)',
+      fontSize: 13,
+    }}>
+      {/* faux window chrome */}
+      <div style={{
+        height: 30, background: 'var(--c-paper)', borderBottom: '1px solid var(--c-line)',
+        display: 'flex', alignItems: 'center', padding: '0 12px', gap: 6,
+      }}>
+        <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#E0DBCF' }}/>
+        <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#E0DBCF' }}/>
+        <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#E0DBCF' }}/>
+        <span style={{ flex: 1 }}/>
+        <span style={{ fontFamily: 'var(--ff-mono)', fontSize: 10, color: 'var(--c-mute-2)' }}>app.unifynow.digital/mason</span>
+        <span style={{ flex: 1 }}/>
+      </div>
+
+      <div style={{ display: 'flex', height: 630 }}>
+        <PreviewSidebar view={view}/>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <PreviewTopBar view={view}/>
+          <div style={{ flex: 1, padding: 16, overflow: 'hidden', background: 'var(--c-page)' }}>
+            {VIEWS[view]}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+function PreviewSidebar({ view }) {
+  const Item = ({ icon, label, active, badge, ai }) => (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 9,
+      padding: '7px 12px', margin: '1px 8px', borderRadius: 7,
+      background: active ? 'rgba(255,255,255,0.11)' : 'transparent',
+      color: active ? '#F0ECE2' : 'rgba(232,228,218,0.55)',
+      fontSize: 12, fontWeight: 500, position: 'relative',
+    }}>
+      {active && <span style={{ position: 'absolute', left: -8, top: '50%', transform: 'translateY(-50%)', width: 3, height: 18, borderRadius: '0 2px 2px 0', background: '#C2693B' }}/>}
+      <span style={{ width: 14, height: 14, opacity: 0.9 }}><SiteIcon name={icon} size={14}/></span>
+      <span style={{ flex: 1 }}>{label}</span>
+      {ai && !badge && <span className="ai-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: '#C2693B' }}/>}
+      {badge && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 10, background: '#C2693B', color: '#fff' }}>{badge}</span>}
+    </div>
+  );
+  const Section = ({ title }) => (
+    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+      color: 'rgba(232,228,218,0.32)', padding: '14px 16px 5px' }}>{title}</div>
+  );
+  return (
+    <aside style={{ width: 200, background: '#243D2E', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '16px 14px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ width: 30, height: 30, borderRadius: 7, background: '#F2EEE5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <MasonMark size={16} color="#243D2E"/>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--ff-serif)', fontSize: 15, fontWeight: 700, color: '#F0ECE2', lineHeight: 1 }}>Mason</div>
+          <div style={{ fontSize: 8.5, color: 'rgba(232,228,218,0.42)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 3 }}>Thornton & Vale</div>
+        </div>
+      </div>
+      <Section title="Work"/>
+      <Item icon="grid"  label="Hub"/>
+      <Item icon="flame" label="Priority orders" badge={6} ai/>
+      <Item icon="truck" label="Logistics"/>
+      <Item icon="coins" label="Finance"/>
+      <Section title="AI Workflows"/>
+      <Item icon="inbox" label="Enquiry Triage" badge={5} ai active={view === 'enquiries'}/>
+      <Item icon="pen"   label="Proof Review"   badge={3} ai active={view === 'proofs'}/>
+      <Item icon="stamp" label="Permit Chase"   badge={2} ai active={view === 'permits'}/>
+      <div style={{ flex: 1 }}/>
+      <div style={{ padding: 10, borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 9 }}>
+        <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(194,105,59,0.3)', color: '#E8A878', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>AY</div>
+        <div>
+          <div style={{ fontSize: 11, color: '#F0ECE2', fontWeight: 500 }}>Aylin</div>
+          <div style={{ fontSize: 9.5, color: 'rgba(232,228,218,0.42)' }}>Office Manager</div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function PreviewTopBar({ view }) {
+  const titles = {
+    enquiries: ['Enquiry Triage', 'Inbound messages parsed into draft orders — you approve.'],
+    proofs:    ['Proof Review',   'AI checks the proof against the brief and house style before it leaves.'],
+    permits:   ['Permit Chase',   'Grouped by cemetery with dwell-time and one-click council chases.'],
+  };
+  const [t, s] = titles[view];
+  return (
+    <header style={{
+      minHeight: 48, background: 'var(--c-paper)', borderBottom: '1px solid var(--c-line)',
+      display: 'flex', alignItems: 'center', padding: '8px 18px', gap: 14,
+    }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: 'var(--ff-serif)', fontSize: 17, fontWeight: 600, color: 'var(--c-ink)', letterSpacing: '-0.01em', lineHeight: 1.1 }}>{t}</div>
+        <div style={{ fontSize: 11, color: 'var(--c-mute)', marginTop: 2 }}>{s}</div>
+      </div>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 9, padding: '5px 10px',
+        border: '1px solid var(--c-line)', borderRadius: 7, background: 'var(--c-page)',
+      }}>
+        <span style={{
+          fontFamily: 'var(--ff-mono)', fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
+          padding: '2px 6px', borderRadius: 4, background: 'rgba(194,105,59,0.1)', color: '#8A3A18',
+        }}>THIS WEEK</span>
+        <div style={{ lineHeight: 1.05 }}>
+          <div style={{ fontFamily: 'var(--ff-serif)', fontSize: 14, fontWeight: 600, color: 'var(--c-ink)' }}>−4.2 days</div>
+          <div style={{ fontSize: 8.5, color: 'var(--c-mute)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>avg. turnaround</div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/* — Enquiries view — */
+function PreviewEnquiries() {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 12, height: '100%' }}>
+      <div style={{ background: 'var(--c-paper)', border: '1px solid var(--c-line)', borderRadius: 8, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--c-line)', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ fontSize: 11, fontWeight: 600 }}>Unsorted enquiries</div>
+          <span style={{ fontSize: 9.5, fontWeight: 700, padding: '2px 6px', borderRadius: 10, background: 'rgba(194,105,59,0.12)', color: '#8A3A18' }}>5 new</span>
+        </div>
+        <div style={{ padding: 8, borderBottom: '1px solid var(--c-line)', background: 'rgba(194,105,59,0.05)', fontSize: 10.5 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4 }}>
+            <span className="ai-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: '#C2693B' }}/>
+            <span style={{ fontWeight: 700, color: '#8A3A18', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: 9 }}>Mason suggests</span>
+          </div>
+          <div style={{ color: 'var(--c-ink-2)', lineHeight: 1.4 }}>3 enquiries are safe to auto-draft as orders.</div>
+          <div style={{ marginTop: 6, display: 'flex', gap: 5 }}>
+            <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 5, background: '#C2693B', color: '#fff', fontWeight: 600 }}>Approve 3</span>
+            <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 5, color: 'var(--c-mute)', fontWeight: 600 }}>Review</span>
+          </div>
+        </div>
+        {[
+          { from: 'Margaret Holloway', sub: 'Headstone for my late husband — Bristol', c: 96, sel: true, ch: 'mail' },
+          { from: 'David Okafor',      sub: 'Quote request — Haycombe',                c: 71, ch: 'whatsapp' },
+          { from: 'Reverend P. Whitby',sub: 'Additional inscription — Ashworth plot',  c: 89, ch: 'mail' },
+          { from: 'Sarah Penrose',     sub: 'Checking proof',                          c: 94, ch: 'phone' },
+        ].map((e, i) => (
+          <div key={i} style={{
+            padding: '10px 12px', borderBottom: '1px solid var(--c-line)',
+            background: e.sel ? '#F5E8DC' : 'transparent',
+          }}>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <span style={{ color: e.ch === 'whatsapp' ? '#25D366' : e.ch === 'phone' ? '#3A6A9A' : 'var(--c-mute)' }}>
+                <SiteIcon name={e.ch} size={11}/>
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--c-ink)', flex: 1 }}>{e.from}</span>
+              <span style={{ fontSize: 9.5, color: 'var(--c-mute-2)', fontFamily: 'var(--ff-mono)' }}>18 Apr</span>
+            </div>
+            <div style={{ fontSize: 10.5, color: 'var(--c-mute)', marginTop: 4, lineHeight: 1.35,
+              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {e.sub}
+            </div>
+            <div style={{ marginTop: 6 }}>
+              <span style={{
+                fontSize: 9.5, fontWeight: 600, padding: '2px 7px', borderRadius: 10,
+                background: e.c > 90 ? '#E5EEE0' : e.c > 80 ? '#FDF0E4' : '#F0ECE2',
+                color:      e.c > 90 ? '#2A5234' : e.c > 80 ? '#8A3A18' : 'var(--c-mute)',
+              }}>{e.c}% confident</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background: 'var(--c-paper)', border: '1px solid var(--c-line)', borderRadius: 8, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--c-line)', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(194,105,59,0.2)', color: '#8A3A18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>MH</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ fontFamily: 'var(--ff-serif)', fontSize: 14, fontWeight: 600 }}>Margaret Holloway</div>
+              <span style={{ fontSize: 9, fontFamily: 'var(--ff-mono)', padding: '1px 5px', borderRadius: 8, background: '#F0ECE2', color: 'var(--c-mute)' }}>EN-2481</span>
+            </div>
+            <div style={{ fontSize: 10.5, color: 'var(--c-mute)', fontFamily: 'var(--ff-mono)' }}>m.holloway@outlook.com · via email</div>
+          </div>
+        </div>
+
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: 0 }}>
+          <div style={{ padding: '14px 16px', borderRight: '1px solid var(--c-line)', overflow: 'hidden' }}>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--c-mute-2)', marginBottom: 8 }}>Original message</div>
+            <div style={{ fontFamily: 'var(--ff-serif)', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Headstone for my late husband — Bristol</div>
+            <div style={{ fontSize: 11.5, lineHeight: 1.55, color: 'var(--c-ink-2)' }}>
+              Good morning, following our telephone call on Tuesday, I'd like to proceed with the{' '}
+              <mark style={{ background: 'rgba(194,105,59,0.16)', padding: '1px 2px', borderRadius: 3, borderBottom: '1.5px solid #C2693B' }}>Dean upright in Nabresina limestone</mark>. Inscription to read:{' '}
+              <mark style={{ background: 'rgba(194,105,59,0.16)', padding: '1px 2px', borderRadius: 3, borderBottom: '1.5px solid #C2693B' }}>In loving memory of Arthur James Holloway, 1939–2025, beloved husband, father and grandfather.</mark> The cemetery is{' '}
+              <mark style={{ background: 'rgba(194,105,59,0.16)', padding: '1px 2px', borderRadius: 3, borderBottom: '1.5px solid #C2693B' }}>Canford Cemetery, Westbury-on-Trym</mark>. Kind regards, Margaret.
+            </div>
+          </div>
+
+          <div style={{ padding: '14px 16px', background: 'var(--c-paper-2)', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--c-mute-2)' }}>AI-drafted order</span>
+              <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(194,105,59,0.12)', color: '#8A3A18', letterSpacing: '0.06em' }}>96% CONFIDENT</span>
+            </div>
+            {[
+              ['Customer', 'Margaret Holloway', 98],
+              ['Order type', 'New memorial', 92],
+              ['Product', 'Dean upright, Nabresina limestone', 96],
+              ['Cemetery', 'Canford Cemetery, Westbury-on-Trym', 92],
+              ['Inscription', 'In loving memory of Arthur James Holloway, 1939–2025…', 88],
+            ].map(([l, v, c], i) => (
+              <div key={i} style={{ padding: '7px 10px', background: 'var(--c-page)', border: '1px solid var(--c-line)', borderRadius: 6, marginBottom: 6 }}>
+                <div style={{ display: 'flex', gap: 5, alignItems: 'center', marginBottom: 2 }}>
+                  <span style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--c-mute-2)' }}>{l}</span>
+                  <span style={{ fontSize: 8.5, fontFamily: 'var(--ff-mono)', color: 'var(--c-mute-2)' }}>· {c}%</span>
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--c-ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v}</div>
+              </div>
+            ))}
+            <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+              <button style={{ background: '#C2693B', color: '#fff', border: 'none', padding: '6px 11px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit' }}>✓ Create order</button>
+              <button style={{ background: 'var(--c-paper)', color: 'var(--c-ink)', border: '1px solid var(--c-line)', padding: '6px 11px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit' }}>Edit draft</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* — Proofs view — */
+function PreviewProofs() {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 12, height: '100%' }}>
+      <div style={{ background: 'var(--c-paper)', border: '1px solid var(--c-line)', borderRadius: 8, overflow: 'hidden' }}>
+        <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--c-line)', fontSize: 11, fontWeight: 600 }}>Proof queue</div>
+        {[
+          { name: 'Robert Penrose', stage: 'Awaiting approval',  v: 'v3', sel: true,  age: '4d' },
+          { name: 'Elizabeth Gwynne', stage: 'Drafting proof',   v: 'v0', age: '5d' },
+          { name: 'Fatima Ahmed',   stage: 'Drafting proof',     v: 'v0', age: '2d' },
+          { name: 'George Priddle', stage: 'Approved',           v: 'v2', age: '6d' },
+        ].map((p, i) => (
+          <div key={i} style={{
+            padding: '10px 12px', borderBottom: '1px solid var(--c-line)',
+            background: p.sel ? '#F5E8DC' : 'transparent',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ fontFamily: 'var(--ff-serif)', fontSize: 12, fontWeight: 600 }}>{p.name}</div>
+              <span style={{ flex: 1 }}/>
+              <span style={{ fontSize: 9.5, color: 'var(--c-mute-2)', fontFamily: 'var(--ff-mono)' }}>{p.v} · {p.age}</span>
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--c-mute)', marginTop: 3 }}>{p.stage}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background: 'var(--c-paper)', border: '1px solid var(--c-line)', borderRadius: 8, padding: 14, display: 'grid', gridTemplateColumns: '1fr 280px', gap: 14, minHeight: 0 }}>
+        {/* the proof itself */}
+        <div style={{
+          background: 'var(--c-paper-2)', border: '1px solid var(--c-line-2)', borderRadius: 4,
+          padding: 22, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          boxShadow: 'inset 0 0 30px rgba(40,32,18,0.04)',
+          fontFamily: 'var(--ff-serif)', color: 'var(--c-ink)', textAlign: 'center', lineHeight: 1.7,
+        }}>
+          <div style={{ fontSize: 11.5, fontStyle: 'italic', color: 'var(--c-mute)', marginBottom: 6 }}>In loving memory of</div>
+          <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: '0.08em' }}>ROBERT JOHN PENROSE</div>
+          <div style={{ fontSize: 11.5, marginTop: 3, color: 'var(--c-ink-2)' }}>
+            12<sup>th</sup> May 1951{' '}
+            <mark style={{ background: 'rgba(194,105,59,0.18)', padding: '0 2px', borderRadius: 2, borderBottom: '1.5px solid #C2693B' }}>—</mark>
+            {' '}3<sup>rd</sup> February 2026
+          </div>
+          <div style={{ fontSize: 11.5, marginTop: 8, color: 'var(--c-ink-2)' }}>Dearly loved husband of Helen,</div>
+          <div style={{ fontSize: 11.5, color: 'var(--c-ink-2)' }}>father to Sarah and Michael</div>
+          <div style={{ fontSize: 11.5, fontStyle: 'italic', marginTop: 8, color: 'var(--c-mute)' }}>"At rest in the garden he loved"</div>
+        </div>
+
+        {/* AI checks */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 11, minWidth: 0 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--c-mute-2)' }}>Mason checks</div>
+          {[
+            ['pass', 'Dates verified against order brief'],
+            ['pass', 'Spelling matches correspondence (4 instances)'],
+            ['warn', 'Line 5 uses en-dash; house style is em-dash'],
+            ['pass', 'Length within Arnos Vale regulations'],
+            ['info', 'Quote "At rest…" — supplied by family on 4 Apr'],
+          ].map(([level, msg], i) => {
+            const tone = level === 'pass' ? { bg: '#E5EEE0', fg: '#2A5234', dot: '#4A8A62', mark: '✓' }
+                       : level === 'warn' ? { bg: '#FDF0E4', fg: '#8A3A18', dot: '#C2693B', mark: '!' }
+                       : { bg: '#E0EBF5', fg: '#1A3A6A', dot: '#3A6A9A', mark: 'i' };
+            return (
+              <div key={i} style={{
+                background: tone.bg, color: tone.fg, padding: '7px 9px', borderRadius: 6,
+                display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 10.5, lineHeight: 1.4,
+              }}>
+                <span style={{ width: 14, height: 14, borderRadius: '50%', background: tone.dot, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, flexShrink: 0 }}>{tone.mark}</span>
+                <span>{msg}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* — Permits view — */
+function PreviewPermits() {
+  const STAGES = [
+    { key: 'form_needed',   label: 'Form needed',     n: 3 },
+    { key: 'with_customer', label: 'With customer',   n: 3 },
+    { key: 'completing',    label: 'Completing',      n: 2 },
+    { key: 'submitted',     label: 'With council',    n: 3 },
+    { key: 'approved',      label: 'Approved',        n: 1 },
+  ];
+  const ITEMS = {
+    form_needed:   [{ n: 'Clarke',    c: 'Arnos Vale',   d: '1d' }, { n: 'Holloway', c: 'Canford', d: '3d' }, { n: 'Doyle', c: "St Brendan's", d: '4d', warn: true }],
+    with_customer: [{ n: 'Ashworth',  c: "St Mary's, Kendal", d: '5d' }, { n: 'Okafor', c: 'Canford', d: '9d' }, { n: 'Briggs', c: 'Haycombe', d: '13d', warn: true }],
+    completing:    [{ n: 'Penrose',   c: 'Arnos Vale',   d: '1d' }, { n: 'Ahmed',    c: 'Arnos Vale', d: '4d' }],
+    submitted:     [{ n: 'Whitmore',  c: 'Haycombe',     d: '26d' }, { n: 'Patel',   c: 'Haycombe',  d: '31d', warn: true }, { n: 'Fielding', c: 'Arnos Vale', d: '18d' }],
+    approved:      [{ n: 'Singh',     c: 'Canford',      d: '0d' }],
+  };
+  return (
+    <div style={{ height: '100%', background: 'var(--c-paper)', border: '1px solid var(--c-line)', borderRadius: 8, padding: 14, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center' }}>
+        <div style={{ fontSize: 11, fontWeight: 600 }}>Permits in flight</div>
+        <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 10, background: 'rgba(194,105,59,0.12)', color: '#8A3A18', fontWeight: 600 }}>2 over SLA</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, flex: 1, minHeight: 0 }}>
+        {STAGES.map(s => (
+          <div key={s.key} style={{ display: 'flex', flexDirection: 'column', gap: 6, minHeight: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--c-mute)' }}>{s.label}</div>
+              <span style={{ fontSize: 9.5, padding: '1px 6px', borderRadius: 8, background: 'var(--c-page)', color: 'var(--c-mute)', fontWeight: 600 }}>{s.n}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, overflow: 'hidden' }}>
+              {ITEMS[s.key].map((it, i) => (
+                <div key={i} style={{
+                  background: 'var(--c-page)', border: '1px solid var(--c-line)',
+                  borderLeft: it.warn ? '3px solid #C2693B' : '3px solid transparent',
+                  padding: '7px 9px', borderRadius: 5,
+                }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--c-ink)' }}>{it.n}</div>
+                  <div style={{ fontSize: 9.5, color: 'var(--c-mute)', marginTop: 2 }}>{it.c}</div>
+                  <div style={{ fontSize: 9, color: it.warn ? '#8A3A18' : 'var(--c-mute-2)', marginTop: 4, fontFamily: 'var(--ff-mono)', fontWeight: 600 }}>{it.d} in stage</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+// ===== src/sections.jsx =====
+// Shared section components — header/nav, cta, footer, and various reusable blocks.
+
+const { useState, useEffect } = React;
+
+window.SiteNav = function SiteNav({ tone = 'paper', onTweaks }) {
+  const isDeep = tone === 'deep';
+  const fg = isDeep ? '#F0ECE2' : 'var(--c-ink)';
+  const muted = isDeep ? 'rgba(232,228,218,0.65)' : 'var(--c-mute)';
+  const border = isDeep ? 'rgba(255,255,255,0.1)' : 'var(--c-line)';
+  const bg = isDeep ? 'var(--c-deep)' : 'var(--c-paper)';
+  return (
+    <header style={{
+      position: 'sticky', top: 0, zIndex: 30, background: bg,
+      borderBottom: `1px solid ${border}`,
+      backdropFilter: 'saturate(120%)',
+    }}>
+      <div className="wrap" style={{
+        display: 'flex', alignItems: 'center', gap: 28,
+        padding: '14px 32px', minHeight: 64,
+      }}>
+        <a href="#" style={{ display: 'flex', alignItems: 'center', gap: 10, color: fg }}>
+          <div style={{ width: 30, height: 30, borderRadius: 7, background: isDeep ? 'var(--c-page)' : 'var(--c-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <MasonMark size={17} color={isDeep ? 'var(--c-deep)' : '#F0ECE2'}/>
+          </div>
+          <div style={{ lineHeight: 1.05 }}>
+            <div style={{ fontFamily: 'var(--ff-display)', fontSize: 20, fontWeight: 600, letterSpacing: '-0.02em' }}>Mason</div>
+            <div style={{ fontSize: 9.5, color: muted, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 1 }}>by Unify</div>
+          </div>
+        </a>
+        <nav style={{ display: 'flex', gap: 26, marginLeft: 18 }} className="site-nav">
+          {CONTENT.nav.map(n => (
+            <a key={n.label} href={n.href} style={{ fontSize: 14, color: muted, fontWeight: 500 }}
+               onMouseEnter={e => e.currentTarget.style.color = fg}
+               onMouseLeave={e => e.currentTarget.style.color = muted}>
+              {n.label}
+            </a>
+          ))}
+        </nav>
+        <div style={{ flex: 1 }}/>
+        <a href="#login" style={{ fontSize: 14, color: muted, fontWeight: 500 }}>Sign in</a>
+        <a href="#demo" style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          padding: '9px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+          background: 'var(--c-acc)', color: '#fff',
+        }}>
+          Book a demo <SiteIcon name="arrowRight" size={14}/>
+        </a>
+        <style>{`
+          @media (max-width: 880px) { .site-nav { display: none; } }
+        `}</style>
+      </div>
+    </header>
+  );
+};
+
+window.TrustStrip = function TrustStrip({ tone = 'paper' }) {
+  const isDeep = tone === 'deep';
+  return (
+    <section style={{
+      padding: '36px 0', borderTop: `1px solid ${isDeep ? 'rgba(255,255,255,0.08)' : 'var(--c-line)'}`,
+      borderBottom: `1px solid ${isDeep ? 'rgba(255,255,255,0.08)' : 'var(--c-line)'}`,
+      background: isDeep ? 'var(--c-deep-2)' : 'transparent',
+    }}>
+      <div className="wrap" style={{ display: 'flex', alignItems: 'center', gap: 30, flexWrap: 'wrap' }}>
+        <div className="eyebrow" style={{ color: isDeep ? 'rgba(232,228,218,0.55)' : undefined, flexShrink: 0 }}>
+          {CONTENT.trust.label}
+        </div>
+        <div style={{ display: 'flex', gap: 36, flexWrap: 'wrap', alignItems: 'center', flex: 1 }}>
+          {CONTENT.trust.logos.map(l => (
+            <div key={l} style={{
+              fontFamily: 'var(--ff-display)', fontSize: 17, fontWeight: 500,
+              color: isDeep ? 'rgba(232,228,218,0.7)' : 'var(--c-ink-2)',
+              letterSpacing: '-0.005em', opacity: 0.85,
+            }}>{l}</div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+window.HowItFits = function HowItFits({ direction }) {
+  const c = CONTENT.how;
+  return (
+    <section id="how" style={{ padding: '110px 0', borderTop: '1px solid var(--c-line)' }}>
+      <div className="wrap">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 60, alignItems: 'flex-start' }} className="grid-1-2">
+          <div>
+            <div className="eyebrow" style={{ marginBottom: 16 }}>{c.eyebrow}</div>
+            <h2 className="ff-display" style={{
+              margin: 0, fontSize: 'clamp(32px, 4vw, 48px)', lineHeight: 1.05,
+              letterSpacing: '-0.022em', fontWeight: 500, color: 'var(--c-ink)',
+            }}>{c.title}</h2>
+            <p style={{ marginTop: 20, fontSize: 16, color: 'var(--c-mute)', lineHeight: 1.6, maxWidth: 360 }}>
+              {c.sub}
+            </p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--c-line)', border: '1px solid var(--c-line)', borderRadius: 10, overflow: 'hidden' }} className="grid-3">
+            {c.pillars.map((p, i) => (
+              <div key={p.title} style={{ background: 'var(--c-paper)', padding: 28 }}>
+                <div className="ff-mono" style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--c-acc)', marginBottom: 16 }}>
+                  {String(i + 1).padStart(2, '0')} · {p.kicker}
+                </div>
+                <div className="ff-display" style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, letterSpacing: '-0.015em', marginBottom: 12 }}>
+                  {p.title}
+                </div>
+                <div style={{ fontSize: 14, color: 'var(--c-mute)', lineHeight: 1.6 }}>{p.body}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <style>{`
+        @media (max-width: 900px) {
+          .grid-1-2 { grid-template-columns: 1fr !important; gap: 40px !important; }
+          .grid-3   { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+    </section>
+  );
+};
+
+window.MetricsTable = function MetricsTable() {
+  const c = CONTENT.metrics;
+  return (
+    <section style={{ padding: '110px 0', background: 'var(--c-deep)', color: '#F0ECE2', position: 'relative', overflow: 'hidden' }}>
+      <div className="wrap">
+        <div style={{ maxWidth: 720, marginBottom: 56 }}>
+          <div className="eyebrow" style={{ color: 'rgba(232,228,218,0.55)', marginBottom: 16 }}>{c.eyebrow}</div>
+          <h2 className="ff-display" style={{
+            margin: 0, fontSize: 'clamp(32px, 4.2vw, 52px)', lineHeight: 1.05,
+            letterSpacing: '-0.022em', fontWeight: 500, color: '#F8F4EA',
+          }}>{c.title}</h2>
+          <p style={{ marginTop: 18, fontSize: 16, color: 'rgba(232,228,218,0.7)', lineHeight: 1.6, maxWidth: 540 }}>{c.sub}</p>
+        </div>
+        <div style={{
+          border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, overflow: 'hidden',
+          background: 'rgba(255,255,255,0.025)',
+        }}>
+          <div style={{
+            display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr',
+            padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.12)',
+            fontFamily: 'var(--ff-mono)', fontSize: 10.5, fontWeight: 600, letterSpacing: '0.12em',
+            textTransform: 'uppercase', color: 'rgba(232,228,218,0.55)',
+          }}>
+            <div>Metric</div><div>Before Mason</div><div>With Mason</div><div>Change</div>
+          </div>
+          {c.rows.map((r, i) => (
+            <div key={r.label} style={{
+              display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', alignItems: 'center',
+              padding: '20px 24px',
+              borderBottom: i < c.rows.length - 1 ? '1px solid rgba(255,255,255,0.08)' : 'none',
+            }}>
+              <div style={{ fontSize: 15, color: '#F0ECE2' }}>{r.label}</div>
+              <div className="ff-mono" style={{ fontSize: 14, color: 'rgba(232,228,218,0.55)', textDecoration: 'line-through', textDecorationColor: 'rgba(232,228,218,0.3)' }}>{r.before}</div>
+              <div className="ff-display" style={{ fontSize: 22, fontWeight: 500, color: '#F8F4EA', letterSpacing: '-0.01em' }}>{r.after}</div>
+              <div className="ff-mono" style={{ fontSize: 13, fontWeight: 600, color: '#E8A878', letterSpacing: '0.02em' }}>{r.delta}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 18, fontSize: 12, color: 'rgba(232,228,218,0.45)', fontStyle: 'italic' }}>
+          Q1 2026 · Thornton & Vale Memorials, Bristol · 4-mason workshop
+        </div>
+      </div>
+    </section>
+  );
+};
+
+window.Testimonial = function Testimonial() {
+  const t = CONTENT.testimonial;
+  return (
+    <section style={{ padding: '110px 0', borderTop: '1px solid var(--c-line)' }}>
+      <div className="wrap" style={{ maxWidth: 920, margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ marginBottom: 28, color: 'var(--c-acc)' }}>
+          <SiteIcon name="quote" size={42}/>
+        </div>
+        <blockquote className="ff-display" style={{
+          margin: 0, fontSize: 'clamp(24px, 3.2vw, 36px)', lineHeight: 1.25,
+          letterSpacing: '-0.02em', fontWeight: 400, color: 'var(--c-ink)',
+          textWrap: 'pretty',
+        }}>
+          &ldquo;{t.quote}&rdquo;
+        </blockquote>
+        <div style={{ marginTop: 36, display: 'inline-flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(194,105,59,0.2)', color: 'var(--c-acc-dk)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700 }}>AT</div>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontWeight: 600, fontSize: 15 }}>{t.name}</div>
+            <div style={{ fontSize: 13, color: 'var(--c-mute)' }}>{t.role} · {t.location}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+window.Pricing = function Pricing() {
+  const c = CONTENT.pricing;
+  return (
+    <section id="pricing" style={{ padding: '110px 0', borderTop: '1px solid var(--c-line)' }}>
+      <div className="wrap">
+        <div style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto 56px' }}>
+          <div className="eyebrow" style={{ marginBottom: 16 }}>{c.eyebrow}</div>
+          <h2 className="ff-display" style={{ margin: 0, fontSize: 'clamp(32px, 4vw, 48px)', lineHeight: 1.05, letterSpacing: '-0.022em', fontWeight: 500 }}>{c.title}</h2>
+          <p style={{ marginTop: 18, fontSize: 16, color: 'var(--c-mute)', lineHeight: 1.6 }}>{c.sub}</p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }} className="grid-3">
+          {c.plans.map(p => (
+            <div key={p.name} style={{
+              padding: 32, borderRadius: 12,
+              background: p.featured ? 'var(--c-deep)' : 'var(--c-paper)',
+              color: p.featured ? '#F0ECE2' : 'var(--c-ink)',
+              border: p.featured ? '1px solid var(--c-deep-2)' : '1px solid var(--c-line)',
+              position: 'relative',
+            }}>
+              {p.featured && (
+                <div style={{
+                  position: 'absolute', top: -10, left: 24,
+                  background: 'var(--c-acc)', color: '#fff',
+                  padding: '3px 10px', borderRadius: 12, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
+                }}>Most workshops</div>
+              )}
+              <div className="ff-display" style={{ fontSize: 26, fontWeight: 500, letterSpacing: '-0.015em' }}>{p.name}</div>
+              <div style={{ fontSize: 13, color: p.featured ? 'rgba(232,228,218,0.65)' : 'var(--c-mute)', marginTop: 4 }}>{p.for}</div>
+              <div style={{ marginTop: 24, display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <span className="ff-display" style={{ fontSize: 40, fontWeight: 500, letterSpacing: '-0.02em' }}>{p.price}</span>
+                <span style={{ fontSize: 14, color: p.featured ? 'rgba(232,228,218,0.55)' : 'var(--c-mute)' }}>{p.per}</span>
+              </div>
+              <div style={{ height: 1, background: p.featured ? 'rgba(255,255,255,0.12)' : 'var(--c-line)', margin: '24px 0' }}/>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {p.features.map(f => (
+                  <li key={f} style={{ display: 'flex', gap: 10, fontSize: 13.5, color: p.featured ? 'rgba(232,228,218,0.85)' : 'var(--c-ink-2)' }}>
+                    <span style={{ color: 'var(--c-acc)', flexShrink: 0, marginTop: 2 }}><SiteIcon name="check" size={14} stroke={2}/></span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <a href="#demo" style={{
+                display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6,
+                marginTop: 28, padding: '12px 18px', borderRadius: 8, fontSize: 14, fontWeight: 600,
+                background: p.featured ? 'var(--c-acc)' : 'transparent',
+                color: p.featured ? '#fff' : 'var(--c-ink)',
+                border: p.featured ? '1px solid var(--c-acc)' : '1px solid var(--c-line-2)',
+              }}>
+                {p.price === 'Talk to us' ? 'Get in touch' : 'Start a 30-day trial'}
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+      <style>{`
+        @media (max-width: 900px) { .grid-3 { grid-template-columns: 1fr !important; } }
+      `}</style>
+    </section>
+  );
+};
+
+window.FAQ = function FAQ() {
+  const [open, setOpen] = useState(0);
+  return (
+    <section style={{ padding: '110px 0', borderTop: '1px solid var(--c-line)' }}>
+      <div className="wrap" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 60 }} className="grid-1-2">
+        <div>
+          <div className="eyebrow" style={{ marginBottom: 16 }}>Questions</div>
+          <h2 className="ff-display" style={{ margin: 0, fontSize: 'clamp(28px, 3.5vw, 40px)', lineHeight: 1.1, letterSpacing: '-0.022em', fontWeight: 500 }}>
+            What workshops ask before they sign on.
+          </h2>
+        </div>
+        <div>
+          {CONTENT.faq.map((q, i) => {
+            const isOpen = i === open;
+            return (
+              <div key={i} style={{ borderTop: i === 0 ? '1px solid var(--c-line)' : 'none', borderBottom: '1px solid var(--c-line)' }}>
+                <button onClick={() => setOpen(isOpen ? -1 : i)} style={{
+                  display: 'flex', alignItems: 'center', gap: 16, width: '100%',
+                  padding: '22px 4px', background: 'transparent', border: 'none', cursor: 'pointer',
+                  textAlign: 'left', fontFamily: 'inherit',
+                }}>
+                  <span className="ff-display" style={{ fontSize: 19, fontWeight: 500, letterSpacing: '-0.015em', color: 'var(--c-ink)', flex: 1, textWrap: 'balance' }}>{q.q}</span>
+                  <span style={{ color: 'var(--c-mute)', transition: 'transform .2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0)' }}>
+                    <SiteIcon name="chevDown" size={18}/>
+                  </span>
+                </button>
+                {isOpen && (
+                  <div className="fade-up" style={{ paddingBottom: 22, paddingRight: 56, fontSize: 15, color: 'var(--c-mute)', lineHeight: 1.65 }}>
+                    {q.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+window.CTASection = function CTASection() {
+  const c = CONTENT.cta;
+  return (
+    <section id="demo" style={{
+      padding: '110px 0', position: 'relative', overflow: 'hidden',
+      background: 'var(--c-acc)', color: '#fff',
+    }}>
+      <div className="wrap" style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 60, alignItems: 'center' }} className="grid-3-2">
+        <div>
+          <div className="eyebrow" style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 14 }}>{c.eyebrow}</div>
+          <h2 className="ff-display" style={{ margin: 0, fontSize: 'clamp(34px, 4.5vw, 56px)', lineHeight: 1.04, letterSpacing: '-0.022em', fontWeight: 500, color: '#fff', textWrap: 'balance' }}>
+            {c.title}
+          </h2>
+          <p style={{ marginTop: 20, fontSize: 17, color: 'rgba(255,255,255,0.85)', lineHeight: 1.55, maxWidth: 520 }}>{c.sub}</p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <a href="#book" style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '18px 24px', borderRadius: 10, background: '#fff', color: 'var(--c-acc-dk)',
+            fontSize: 16, fontWeight: 600,
+          }}>
+            {c.primary.label} <SiteIcon name="arrowRight" size={18}/>
+          </a>
+          <a href={`mailto:${c.contact}`} style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '18px 24px', borderRadius: 10, background: 'rgba(255,255,255,0.12)', color: '#fff',
+            fontSize: 16, fontWeight: 600, border: '1px solid rgba(255,255,255,0.25)',
+          }}>
+            {c.secondary.label} <SiteIcon name="mail" size={18}/>
+          </a>
+          <div className="ff-mono" style={{ marginTop: 6, fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
+            or call us · 0117 422 0188
+          </div>
+        </div>
+      </div>
+      <style>{`
+        @media (max-width: 900px) { .grid-3-2 { grid-template-columns: 1fr !important; gap: 32px !important; } }
+      `}</style>
+    </section>
+  );
+};
+
+window.SiteFooter = function SiteFooter() {
+  const f = CONTENT.footer;
+  return (
+    <footer style={{ background: 'var(--c-deep-2)', color: 'rgba(232,228,218,0.7)', padding: '64px 0 36px' }}>
+      <div className="wrap">
+        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr repeat(4, 1fr)', gap: 40 }} className="footer-grid">
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 7, background: 'var(--c-page)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <MasonMark size={18} color="var(--c-deep)"/>
+              </div>
+              <div className="ff-display" style={{ fontSize: 22, fontWeight: 600, color: '#F0ECE2', letterSpacing: '-0.02em' }}>Mason</div>
+            </div>
+            <div style={{ fontSize: 13, color: 'rgba(232,228,218,0.55)', maxWidth: 260, lineHeight: 1.55 }}>
+              {f.note}
+            </div>
+            <div style={{ marginTop: 18, fontSize: 12, color: 'rgba(232,228,218,0.45)' }}>
+              {f.parent}
+            </div>
+          </div>
+          {f.cols.map(col => (
+            <div key={col.title}>
+              <div className="eyebrow" style={{ color: 'rgba(232,228,218,0.45)', marginBottom: 14, fontSize: 10.5 }}>{col.title}</div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 9 }}>
+                {col.links.map(l => (
+                  <li key={l}><a href="#" style={{ fontSize: 13, color: 'rgba(232,228,218,0.7)' }}>{l}</a></li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 60, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+          <div className="ff-mono" style={{ fontSize: 11, color: 'rgba(232,228,218,0.45)' }}>{f.address}</div>
+          <div className="ff-mono" style={{ fontSize: 11, color: 'rgba(232,228,218,0.45)' }}>unifynow.digital · v2.4</div>
+        </div>
+      </div>
+      <style>{`
+        @media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr !important; } }
+        @media (max-width: 600px) { .footer-grid { grid-template-columns: 1fr !important; } }
+      `}</style>
+    </footer>
+  );
+};
+
+
+// ===== src/directions.jsx =====
+// Four visual directions for the hero + workflows sections.
+// Each shares the same content (CONTENT.hero, CONTENT.workflows) but reframes the
+// composition, type system, and texture.
+
+const DIRECTIONS = ['editorial', 'workshop', 'clinical', 'letterpress'];
+
+window.HeroAndWorkflows = function HeroAndWorkflows({ direction, showAppPreview, showNumbers }) {
+  const map = {
+    editorial:  <EditorialDirection showAppPreview={showAppPreview} showNumbers={showNumbers}/>,
+    workshop:   <WorkshopDirection  showAppPreview={showAppPreview} showNumbers={showNumbers}/>,
+    clinical:   <ClinicalDirection  showAppPreview={showAppPreview} showNumbers={showNumbers}/>,
+    letterpress:<LetterpressDirection showAppPreview={showAppPreview} showNumbers={showNumbers}/>,
+  };
+  return map[direction] || map.editorial;
+};
+
+/* -------------------------------------------------------------------------- */
+/*  Direction 1 — EDITORIAL                                                   */
+/*  Big serif, asymmetric grid, app screenshot pulls visual weight on right.  */
+/* -------------------------------------------------------------------------- */
+function EditorialDirection({ showAppPreview, showNumbers }) {
+  const h = CONTENT.hero, w = CONTENT.workflows;
+  return (
+    <>
+      <section className="grain" style={{ paddingTop: 60, paddingBottom: 100, position: 'relative', overflow: 'hidden' }}>
+        <div className="wrap">
+          <div style={{ display: 'grid', gridTemplateColumns: '7fr 5fr', gap: 60, alignItems: 'center' }} className="grid-7-5">
+            <div>
+              <div className="eyebrow" style={{ marginBottom: 24 }}>{h.eyebrow}</div>
+              <h1 className="ff-display" style={{
+                margin: 0,
+                fontSize: 'clamp(44px, 6.4vw, 92px)',
+                lineHeight: 0.96,
+                letterSpacing: '-0.035em',
+                fontWeight: 400,
+                color: 'var(--c-ink)',
+                textWrap: 'balance',
+              }}>
+                <span style={{ color: 'var(--c-mute)' }}>{h.headlineLead}</span><br/>
+                <span style={{ fontStyle: 'italic', fontWeight: 500 }}>{h.headlineMain}</span>
+              </h1>
+              <p style={{ marginTop: 28, fontSize: 18, color: 'var(--c-ink-2)', lineHeight: 1.55, maxWidth: 520, textWrap: 'pretty' }}>
+                {h.sub}
+              </p>
+              <div style={{ marginTop: 36, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                <a href={h.primary.href} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  padding: '14px 22px', borderRadius: 9, background: 'var(--c-acc)', color: '#fff',
+                  fontSize: 15, fontWeight: 600,
+                }}>
+                  {h.primary.label} <SiteIcon name="arrowRight" size={16}/>
+                </a>
+                <a href={h.secondary.href} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  padding: '14px 22px', borderRadius: 9, background: 'transparent', color: 'var(--c-ink)',
+                  fontSize: 15, fontWeight: 600, border: '1px solid var(--c-line-2)',
+                }}>
+                  <SiteIcon name="play" size={14}/> {h.secondary.label}
+                </a>
+              </div>
+
+              {showNumbers && (
+                <div style={{ marginTop: 56, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, paddingTop: 28, borderTop: '1px solid var(--c-line)' }} className="proof-grid">
+                  {h.proofPoints.map(p => (
+                    <div key={p.label}>
+                      <div className="ff-display" style={{ fontSize: 30, fontWeight: 500, letterSpacing: '-0.02em', color: 'var(--c-ink)' }}>{p.value}</div>
+                      <div style={{ fontSize: 12.5, color: 'var(--c-mute)', marginTop: 4, lineHeight: 1.4 }}>{p.label}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {showAppPreview && (
+              <div style={{ position: 'relative', height: 460 }} className="hero-art-cell">
+                <div style={{
+                  position: 'absolute', top: 0, right: -100,
+                  transform: 'rotate(-1deg)', transformOrigin: 'top right',
+                }}>
+                  <div style={{
+                    width: 680, height: 416,
+                    overflow: 'hidden', borderRadius: 14,
+                  }}>
+                    <MasonAppPreview view="enquiries" scale={0.63}/>
+                  </div>
+                </div>
+                <div style={{
+                  position: 'absolute', bottom: -10, left: -20,
+                  width: 220, padding: '14px 16px', background: 'var(--c-paper)',
+                  border: '1px solid var(--c-line)', borderRadius: 10,
+                  boxShadow: '0 14px 28px -14px rgba(40,32,18,0.25)',
+                  transform: 'rotate(2deg)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    <span className="ai-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--c-acc)' }}/>
+                    <span className="ff-mono" style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--c-acc-dk)', letterSpacing: '0.08em' }}>MASON DRAFTED</span>
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--c-ink)', lineHeight: 1.4 }}>
+                    Margaret Holloway · headstone, Canford
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--c-mute)', marginTop: 4 }}>96% confident · ready for review</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        <style>{`
+          @media (max-width: 980px) {
+            .grid-7-5 { grid-template-columns: 1fr !important; gap: 40px !important; }
+            .hero-art-cell { height: auto !important; min-height: 300px; }
+            .hero-art-cell > div:first-child { position: relative !important; right: auto !important; transform: none !important; }
+          }
+          @media (max-width: 600px) { .proof-grid { grid-template-columns: 1fr 1fr !important; } }
+        `}</style>
+      </section>
+
+      <TrustStrip/>
+
+      <section id="workflows" style={{ padding: '110px 0' }}>
+        <div className="wrap">
+          <div style={{ maxWidth: 720, marginBottom: 64 }}>
+            <div className="eyebrow" style={{ marginBottom: 16 }}>{w.eyebrow}</div>
+            <h2 className="ff-display" style={{
+              margin: 0, fontSize: 'clamp(32px, 4.4vw, 56px)', lineHeight: 1.05,
+              letterSpacing: '-0.025em', fontWeight: 500, textWrap: 'balance',
+            }}>
+              {w.title}
+            </h2>
+            <p style={{ marginTop: 18, fontSize: 17, color: 'var(--c-mute)', lineHeight: 1.6 }}>{w.sub}</p>
+          </div>
+
+          {w.items.map((it, i) => (
+            <div key={it.n} style={{
+              display: 'grid', gridTemplateColumns: i % 2 === 0 ? '5fr 7fr' : '7fr 5fr',
+              gap: 60, alignItems: 'center', padding: '60px 0',
+              borderTop: '1px solid var(--c-line)',
+            }} className="grid-flip">
+              <div style={{ order: i % 2 === 0 ? 1 : 2 }} className="wf-text">
+                <div className="ff-mono" style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', color: 'var(--c-acc)', marginBottom: 14 }}>
+                  {it.n} · {it.kicker}
+                </div>
+                <h3 className="ff-display" style={{
+                  margin: 0, fontSize: 'clamp(28px, 3.4vw, 40px)', lineHeight: 1.1,
+                  letterSpacing: '-0.022em', fontWeight: 500, color: 'var(--c-ink)', textWrap: 'balance',
+                }}>
+                  {it.title}
+                </h3>
+                <p style={{ marginTop: 16, fontSize: 16, color: 'var(--c-ink-2)', lineHeight: 1.65, textWrap: 'pretty' }}>{it.body}</p>
+                <ul className="ticks" style={{ marginTop: 22 }}>
+                  {it.bullets.map(b => <li key={b}>{b}</li>)}
+                </ul>
+                <div style={{
+                  marginTop: 24, padding: '14px 18px', background: 'var(--c-acc-lt)',
+                  borderRadius: 8, display: 'inline-flex', alignItems: 'baseline', gap: 12,
+                }}>
+                  <span className="ff-display" style={{ fontSize: 24, fontWeight: 600, color: 'var(--c-acc-dk)', letterSpacing: '-0.015em' }}>{it.stat.value}</span>
+                  <span style={{ fontSize: 13, color: 'var(--c-acc-dk)' }}>{it.stat.label}</span>
+                </div>
+              </div>
+              <div style={{ order: i % 2 === 0 ? 2 : 1, position: 'relative', height: 400, overflow: 'hidden', borderRadius: 12 }} className="wf-art">
+                <div style={{ position: 'absolute', top: 0, left: 0, transformOrigin: 'top left' }}>
+                  <MasonAppPreview view={it.kicker.includes('Enquiry') ? 'enquiries' : it.kicker.includes('Proof') ? 'proofs' : 'permits'} scale={0.55}/>
+                </div>
+              </div>
+              <style>{`
+                @media (max-width: 900px) {
+                  .grid-flip { grid-template-columns: 1fr !important; gap: 32px !important; }
+                  .wf-text { order: 1 !important; }
+                  .wf-art  { order: 2 !important; height: 320px !important; }
+                }
+              `}</style>
+            </div>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Direction 2 — WORKSHOP                                                    */
+/*  Trade-press feel: deep green hero, terracotta accents, mono details.      */
+/* -------------------------------------------------------------------------- */
+function WorkshopDirection({ showAppPreview, showNumbers }) {
+  const h = CONTENT.hero, w = CONTENT.workflows;
+  return (
+    <>
+      <section style={{
+        background: 'var(--c-deep)', color: '#F0ECE2',
+        paddingTop: 80, paddingBottom: 100, position: 'relative', overflow: 'hidden',
+      }}>
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0, opacity: 0.3,
+          background:
+            'radial-gradient(circle at 30% 30%, rgba(194,105,59,0.18) 0, transparent 40%),' +
+            'radial-gradient(circle at 80% 70%, rgba(232,228,218,0.06) 0, transparent 35%)',
+        }}/>
+        <div className="wrap" style={{ position: 'relative' }}>
+          <div className="ff-mono" style={{ fontSize: 11, fontWeight: 600, color: 'rgba(232,228,218,0.55)', letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 20 }}>
+            {h.eyebrow} · est. 2024
+          </div>
+          <h1 className="ff-display" style={{
+            margin: 0, fontSize: 'clamp(48px, 7.8vw, 120px)', lineHeight: 0.94,
+            letterSpacing: '-0.035em', fontWeight: 500, color: '#F8F4EA',
+            maxWidth: 1100, textWrap: 'balance',
+          }}>
+            {h.headlineLead}{' '}
+            <span style={{ color: 'var(--c-acc)', fontStyle: 'italic', fontWeight: 400 }}>{h.headlineMain}</span>
+          </h1>
+          <div style={{ marginTop: 40, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'flex-start' }} className="grid-1-1">
+            <p style={{ margin: 0, fontSize: 19, color: 'rgba(232,228,218,0.78)', lineHeight: 1.55, textWrap: 'pretty', maxWidth: 540 }}>{h.sub}</p>
+            <div>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <a href={h.primary.href} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  padding: '14px 22px', borderRadius: 8, background: 'var(--c-acc)', color: '#fff',
+                  fontSize: 15, fontWeight: 600,
+                }}>
+                  {h.primary.label} <SiteIcon name="arrowRight" size={16}/>
+                </a>
+                <a href={h.secondary.href} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  padding: '14px 22px', borderRadius: 8,
+                  background: 'transparent', color: '#F0ECE2',
+                  fontSize: 15, fontWeight: 600, border: '1px solid rgba(255,255,255,0.25)',
+                }}>
+                  <SiteIcon name="play" size={14}/> {h.secondary.label}
+                </a>
+              </div>
+              {showNumbers && (
+                <div style={{ marginTop: 36, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }} className="proof-grid">
+                  {h.proofPoints.map(p => (
+                    <div key={p.label} style={{ borderLeft: '1px solid rgba(255,255,255,0.12)', paddingLeft: 14 }}>
+                      <div className="ff-display" style={{ fontSize: 26, fontWeight: 500, letterSpacing: '-0.02em', color: '#F8F4EA' }}>{p.value}</div>
+                      <div style={{ fontSize: 11.5, color: 'rgba(232,228,218,0.6)', marginTop: 4, lineHeight: 1.4 }}>{p.label}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {showAppPreview && (
+            <div style={{
+              marginTop: 60, position: 'relative', overflow: 'hidden',
+              border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14,
+              maxHeight: 520,
+            }}>
+              <div style={{ transformOrigin: 'top left' }}>
+                <MasonAppPreview view="enquiries" scale={1} shadow={false}/>
+              </div>
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(to bottom, transparent 70%, var(--c-deep) 100%)' }}/>
+            </div>
+          )}
+        </div>
+
+        <style>{`
+          @media (max-width: 880px) {
+            .grid-1-1 { grid-template-columns: 1fr !important; gap: 32px !important; }
+            .proof-grid { grid-template-columns: 1fr 1fr !important; }
+          }
+        `}</style>
+      </section>
+
+      <TrustStrip tone="deep"/>
+
+      <section id="workflows" style={{ padding: '110px 0', background: 'var(--c-page)' }}>
+        <div className="wrap">
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 40, marginBottom: 56, justifyContent: 'space-between', flexWrap: 'wrap' }}>
+            <div style={{ maxWidth: 640 }}>
+              <div className="eyebrow" style={{ marginBottom: 14 }}>{w.eyebrow}</div>
+              <h2 className="ff-display" style={{ margin: 0, fontSize: 'clamp(32px, 4.4vw, 52px)', lineHeight: 1.05, letterSpacing: '-0.025em', fontWeight: 500, textWrap: 'balance' }}>
+                {w.title}
+              </h2>
+            </div>
+            <p style={{ margin: 0, fontSize: 15, color: 'var(--c-mute)', lineHeight: 1.6, maxWidth: 360 }}>{w.sub}</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--c-line)', border: '1px solid var(--c-line)', borderRadius: 12, overflow: 'hidden' }} className="grid-3">
+            {w.items.map(it => (
+              <div key={it.n} style={{ background: 'var(--c-paper)', padding: 32, display: 'flex', flexDirection: 'column' }}>
+                <div className="ff-mono" style={{ fontSize: 11, fontWeight: 600, color: 'var(--c-acc)', letterSpacing: '0.12em', marginBottom: 18 }}>
+                  {it.n} · {it.kicker.toUpperCase()}
+                </div>
+                <h3 className="ff-display" style={{ margin: 0, fontSize: 26, lineHeight: 1.15, letterSpacing: '-0.018em', fontWeight: 500, textWrap: 'balance' }}>
+                  {it.title}
+                </h3>
+                <p style={{ marginTop: 14, fontSize: 14.5, color: 'var(--c-ink-2)', lineHeight: 1.6 }}>{it.body}</p>
+                <div style={{ flex: 1 }}/>
+                <div style={{ marginTop: 26, paddingTop: 18, borderTop: '1px dashed var(--c-line-2)' }}>
+                  <div className="ff-display" style={{ fontSize: 28, fontWeight: 500, color: 'var(--c-acc)', letterSpacing: '-0.015em', lineHeight: 1 }}>{it.stat.value}</div>
+                  <div style={{ fontSize: 12, color: 'var(--c-mute)', marginTop: 6, lineHeight: 1.4 }}>{it.stat.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Direction 3 — CLINICAL                                                    */
+/*  Modern, restrained, lots of whitespace; tabbed product preview.           */
+/* -------------------------------------------------------------------------- */
+function ClinicalDirection({ showAppPreview, showNumbers }) {
+  const h = CONTENT.hero, w = CONTENT.workflows;
+  const [tab, setTab] = useState('enquiries');
+  const tabs = [
+    { id: 'enquiries', label: 'Enquiry Triage' },
+    { id: 'proofs',    label: 'Proof Review' },
+    { id: 'permits',   label: 'Permit Chase' },
+  ];
+  return (
+    <>
+      <section style={{ paddingTop: 80, paddingBottom: 80, background: 'var(--c-paper)' }}>
+        <div className="wrap" style={{ textAlign: 'center', maxWidth: 920, margin: '0 auto' }}>
+          <div className="eyebrow" style={{ marginBottom: 24 }}>{h.eyebrow}</div>
+          <h1 className="ff-display" style={{
+            margin: 0, fontSize: 'clamp(40px, 6vw, 80px)', lineHeight: 1.0,
+            letterSpacing: '-0.03em', fontWeight: 500, color: 'var(--c-ink)', textWrap: 'balance',
+          }}>
+            {h.headlineLead} <span style={{ color: 'var(--c-mute-2)' }}>{h.headlineMain}</span>
+          </h1>
+          <p style={{ marginTop: 26, fontSize: 18, color: 'var(--c-mute)', lineHeight: 1.55, maxWidth: 620, margin: '26px auto 0', textWrap: 'pretty' }}>
+            {h.sub}
+          </p>
+          <div style={{ marginTop: 36, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <a href={h.primary.href} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '14px 22px', borderRadius: 9, background: 'var(--c-ink)', color: '#F8F4EA',
+              fontSize: 15, fontWeight: 600,
+            }}>
+              {h.primary.label} <SiteIcon name="arrowRight" size={16}/>
+            </a>
+            <a href={h.secondary.href} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '14px 22px', borderRadius: 9, color: 'var(--c-ink)',
+              fontSize: 15, fontWeight: 600,
+            }}>
+              {h.secondary.label} <SiteIcon name="arrowRight" size={14}/>
+            </a>
+          </div>
+        </div>
+
+        {showAppPreview && (
+          <div style={{ marginTop: 80 }}>
+            <div className="wrap">
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 24 }}>
+                {tabs.map(t => (
+                  <button key={t.id} onClick={() => setTab(t.id)} style={{
+                    padding: '9px 18px', borderRadius: 100, border: '1px solid',
+                    borderColor: tab === t.id ? 'var(--c-ink)' : 'var(--c-line-2)',
+                    background: tab === t.id ? 'var(--c-ink)' : 'transparent',
+                    color: tab === t.id ? '#F8F4EA' : 'var(--c-ink-2)',
+                    fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  }}>{t.label}</button>
+                ))}
+              </div>
+              <div className="fade-up" key={tab} style={{
+                display: 'flex', justifyContent: 'center',
+                position: 'relative',
+              }}>
+                <div style={{
+                  width: '100%', maxWidth: 1140, height: 'clamp(440px, 60vw, 700px)',
+                  overflow: 'hidden', borderRadius: 16, position: 'relative',
+                }}>
+                  <ResponsivePreview view={tab}/>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showNumbers && (
+          <div className="wrap" style={{ marginTop: 80 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, border: '1px solid var(--c-line)', borderRadius: 12, overflow: 'hidden', background: 'var(--c-paper)' }} className="grid-3">
+              {h.proofPoints.map((p, i) => (
+                <div key={p.label} style={{ padding: '28px 32px', borderLeft: i > 0 ? '1px solid var(--c-line)' : 'none', textAlign: 'left' }}>
+                  <div className="ff-display" style={{ fontSize: 38, fontWeight: 500, letterSpacing: '-0.02em' }}>{p.value}</div>
+                  <div style={{ fontSize: 13, color: 'var(--c-mute)', marginTop: 6 }}>{p.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+
+      <TrustStrip/>
+
+      <section id="workflows" style={{ padding: '120px 0', background: 'var(--c-paper)' }}>
+        <div className="wrap">
+          <div style={{ textAlign: 'center', maxWidth: 720, margin: '0 auto 64px' }}>
+            <div className="eyebrow" style={{ marginBottom: 16 }}>{w.eyebrow}</div>
+            <h2 className="ff-display" style={{ margin: 0, fontSize: 'clamp(32px, 4.4vw, 52px)', lineHeight: 1.05, letterSpacing: '-0.025em', fontWeight: 500 }}>{w.title}</h2>
+            <p style={{ marginTop: 16, fontSize: 16, color: 'var(--c-mute)', lineHeight: 1.6 }}>{w.sub}</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }} className="grid-3">
+            {w.items.map(it => (
+              <div key={it.n} style={{ padding: 32, borderRadius: 14, background: 'var(--c-page)', border: '1px solid var(--c-line)' }}>
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--c-paper)', border: '1px solid var(--c-line)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--c-acc)', marginBottom: 22 }}>
+                  <SiteIcon name={it.kicker.includes('Enquiry') ? 'inbox' : it.kicker.includes('Proof') ? 'pen' : 'stamp'} size={20}/>
+                </div>
+                <div className="ff-mono" style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--c-mute)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>{it.kicker}</div>
+                <h3 className="ff-display" style={{ margin: 0, fontSize: 22, lineHeight: 1.2, letterSpacing: '-0.018em', fontWeight: 500, textWrap: 'balance' }}>
+                  {it.title}
+                </h3>
+                <p style={{ marginTop: 12, fontSize: 14, color: 'var(--c-mute)', lineHeight: 1.6 }}>{it.body}</p>
+                <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--c-line)', display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                  <span className="ff-display" style={{ fontSize: 22, fontWeight: 500, color: 'var(--c-acc)', letterSpacing: '-0.015em' }}>{it.stat.value}</span>
+                  <span style={{ fontSize: 12, color: 'var(--c-mute)' }}>{it.stat.label}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
+// auto-fits the app preview to its container
+function ResponsivePreview({ view }) {
+  const ref = React.useRef(null);
+  const [scale, setScale] = useState(0.75);
+  React.useEffect(() => {
+    const calc = () => {
+      if (!ref.current) return;
+      const w = ref.current.clientWidth;
+      setScale(Math.min(1, w / 1080));
+    };
+    calc();
+    const ro = new ResizeObserver(calc);
+    if (ref.current) ro.observe(ref.current);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <div ref={ref} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ transformOrigin: 'top left' }}>
+        <MasonAppPreview view={view} scale={scale}/>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Direction 4 — LETTERPRESS                                                 */
+/*  Print-shop / specimen-sheet feel; oversized type, swatches, ledger feel.  */
+/* -------------------------------------------------------------------------- */
+function LetterpressDirection({ showAppPreview, showNumbers }) {
+  const h = CONTENT.hero, w = CONTENT.workflows;
+  return (
+    <>
+      <section className="grain" style={{ paddingTop: 50, paddingBottom: 80, position: 'relative' }}>
+        <div className="wrap">
+          <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid var(--c-ink)', paddingBottom: 14, marginBottom: 42 }}>
+            <div className="ff-mono" style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Vol. I &nbsp;·&nbsp; No. 04</div>
+            <div className="ff-mono" style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--c-mute)' }}>{h.eyebrow}</div>
+            <div className="ff-mono" style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Bristol &nbsp;·&nbsp; Spring '26</div>
+          </div>
+
+          <h1 className="ff-display" style={{
+            margin: 0,
+            fontSize: 'clamp(60px, 12vw, 200px)',
+            lineHeight: 0.86,
+            letterSpacing: '-0.045em',
+            fontWeight: 500,
+            color: 'var(--c-ink)',
+            textAlign: 'center',
+          }}>
+            <span style={{ display: 'block' }}>{h.headlineLead}</span>
+            <span style={{ display: 'block', fontStyle: 'italic', color: 'var(--c-acc)', fontWeight: 400 }}>{h.headlineMain}</span>
+          </h1>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', gap: 40, marginTop: 56, alignItems: 'flex-start' }} className="grid-1-2-1">
+            <div className="ff-mono" style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--c-mute)', textTransform: 'uppercase' }}>
+              <div>↳ Set in Fraunces &amp; DM Sans</div>
+              <div style={{ marginTop: 6 }}>↳ Workshop colour: terracotta</div>
+              <div style={{ marginTop: 6 }}>↳ For UK memorial trade</div>
+            </div>
+            <p style={{ margin: 0, fontSize: 19, color: 'var(--c-ink-2)', lineHeight: 1.6, textAlign: 'center', textWrap: 'pretty' }}>{h.sub}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <a href={h.primary.href} style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                padding: '12px 16px', background: 'var(--c-ink)', color: '#F8F4EA',
+                fontSize: 13, fontWeight: 600, fontFamily: 'var(--ff-mono)', letterSpacing: '0.04em', textTransform: 'uppercase',
+              }}>{h.primary.label} <SiteIcon name="arrowRight" size={14}/></a>
+              <a href={h.secondary.href} style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                padding: '12px 16px', background: 'transparent', color: 'var(--c-ink)', border: '1.5px solid var(--c-ink)',
+                fontSize: 13, fontWeight: 600, fontFamily: 'var(--ff-mono)', letterSpacing: '0.04em', textTransform: 'uppercase',
+              }}>{h.secondary.label} <SiteIcon name="play" size={12}/></a>
+            </div>
+          </div>
+
+          {showNumbers && (
+            <div style={{ marginTop: 64, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, borderTop: '2px solid var(--c-ink)', borderBottom: '2px solid var(--c-ink)' }} className="grid-3">
+              {h.proofPoints.map((p, i) => (
+                <div key={p.label} style={{
+                  padding: '28px 24px', borderLeft: i > 0 ? '1px solid var(--c-line-2)' : 'none',
+                  display: 'flex', flexDirection: 'column', gap: 6,
+                }}>
+                  <div className="ff-mono" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--c-mute)' }}>
+                    Specimen {String(i + 1).padStart(2, '0')}
+                  </div>
+                  <div className="ff-display" style={{ fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 500, letterSpacing: '-0.025em', lineHeight: 1, color: 'var(--c-ink)' }}>{p.value}</div>
+                  <div style={{ fontSize: 13, color: 'var(--c-mute)' }}>{p.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <TrustStrip/>
+
+      {showAppPreview && (
+        <section style={{ padding: '90px 0', background: 'var(--c-deep)', overflow: 'hidden' }}>
+          <div className="wrap">
+            <div style={{ color: '#F0ECE2', textAlign: 'center', marginBottom: 40 }}>
+              <div className="ff-mono" style={{ fontSize: 11, fontWeight: 700, color: 'rgba(232,228,218,0.55)', letterSpacing: '0.16em', textTransform: 'uppercase' }}>
+                Plate I — The morning queue
+              </div>
+              <h3 className="ff-display" style={{ margin: '12px 0 0', fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 500, letterSpacing: '-0.02em', color: '#F8F4EA' }}>
+                Five enquiries in. Three already drafted as orders.
+              </h3>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <div style={{ width: '100%', maxWidth: 1140, height: 'clamp(400px, 60vw, 660px)', overflow: 'hidden', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)' }}>
+                <ResponsivePreview view="enquiries"/>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section id="workflows" style={{ padding: '110px 0' }}>
+        <div className="wrap">
+          <h2 className="ff-display" style={{
+            margin: 0, fontSize: 'clamp(36px, 5vw, 64px)', lineHeight: 1.0, letterSpacing: '-0.025em', fontWeight: 500,
+            textAlign: 'center', maxWidth: 920, margin: '0 auto', textWrap: 'balance',
+          }}>
+            {w.title}
+          </h2>
+          <p style={{ marginTop: 18, fontSize: 17, color: 'var(--c-mute)', lineHeight: 1.6, textAlign: 'center', maxWidth: 640, margin: '18px auto 0' }}>{w.sub}</p>
+
+          <div style={{ marginTop: 72 }}>
+            {w.items.map((it, i) => (
+              <div key={it.n} style={{
+                display: 'grid', gridTemplateColumns: '120px 1fr 1fr', gap: 40, padding: '50px 0',
+                borderTop: '1px solid var(--c-line-2)', alignItems: 'flex-start',
+              }} className="lp-row">
+                <div className="ff-display" style={{ fontSize: 96, fontWeight: 400, letterSpacing: '-0.04em', color: 'var(--c-acc)', lineHeight: 0.85, fontStyle: 'italic' }}>{it.n}</div>
+                <div>
+                  <div className="ff-mono" style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-mute)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>{it.kicker}</div>
+                  <h3 className="ff-display" style={{ margin: 0, fontSize: 'clamp(24px, 3vw, 36px)', lineHeight: 1.1, letterSpacing: '-0.02em', fontWeight: 500, textWrap: 'balance' }}>
+                    {it.title}
+                  </h3>
+                  <p style={{ marginTop: 14, fontSize: 15.5, color: 'var(--c-ink-2)', lineHeight: 1.6 }}>{it.body}</p>
+                </div>
+                <div>
+                  <ul className="ticks">
+                    {it.bullets.map(b => <li key={b}>{b}</li>)}
+                  </ul>
+                  <div style={{
+                    marginTop: 18, padding: '14px 16px', background: 'var(--c-page)',
+                    borderLeft: '3px solid var(--c-acc)',
+                  }}>
+                    <div className="ff-display" style={{ fontSize: 22, fontWeight: 500, color: 'var(--c-acc-dk)', letterSpacing: '-0.015em' }}>{it.stat.value}</div>
+                    <div style={{ fontSize: 12.5, color: 'var(--c-mute)', marginTop: 4 }}>{it.stat.label}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <style>{`
+          @media (max-width: 880px) {
+            .lp-row { grid-template-columns: 1fr !important; gap: 16px !important; }
+            .grid-1-2-1 { grid-template-columns: 1fr !important; }
+            .grid-3 { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
+      </section>
+    </>
+  );
+}
+
+
+// ===== src/tweaks.jsx =====
+// In-page Tweaks panel — lets the user switch direction + toggle features.
+
+window.TweaksPanel = function TweaksPanel({ tweaks, setTweaks, onClose }) {
+  const set = (k, v) => {
+    setTweaks(t => {
+      const next = { ...t, [k]: v };
+      try { window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [k]: v } }, '*'); } catch {}
+      return next;
+    });
+  };
+  const Section = ({ title, children }) => (
+    <div style={{ padding: '14px 16px', borderTop: '1px solid var(--c-line)' }}>
+      <div className="ff-mono" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--c-mute)', marginBottom: 10 }}>{title}</div>
+      {children}
+    </div>
+  );
+  const Toggle = ({ label, k }) => (
+    <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', cursor: 'pointer' }}>
+      <span style={{ position: 'relative', width: 32, height: 18, borderRadius: 100, background: tweaks[k] ? 'var(--c-acc)' : 'var(--c-line-2)', transition: 'background .15s' }}>
+        <span style={{ position: 'absolute', top: 2, left: tweaks[k] ? 16 : 2, width: 14, height: 14, borderRadius: '50%', background: '#fff', transition: 'left .15s' }}/>
+      </span>
+      <span style={{ fontSize: 13, color: 'var(--c-ink)' }}>{label}</span>
+      <input type="checkbox" style={{ display: 'none' }} checked={tweaks[k]} onChange={e => set(k, e.target.checked)}/>
+    </label>
+  );
+  const directions = [
+    { id: 'editorial',  label: 'Editorial',   sub: 'Asymmetric serif, peeking screenshot' },
+    { id: 'workshop',   label: 'Workshop',    sub: 'Deep green, trade-press' },
+    { id: 'clinical',   label: 'Clinical',    sub: 'Centered, restrained, tabbed preview' },
+    { id: 'letterpress',label: 'Letterpress', sub: 'Specimen sheet, oversized type' },
+  ];
+  return (
+    <div style={{
+      position: 'fixed', right: 18, bottom: 18, width: 300, zIndex: 9999,
+      background: 'var(--c-paper)', border: '1px solid var(--c-line-2)', borderRadius: 12,
+      boxShadow: '0 24px 48px -16px rgba(40,32,18,0.35), 0 8px 16px -8px rgba(40,32,18,0.2)',
+      fontFamily: 'var(--ff-body)', color: 'var(--c-ink)', overflow: 'hidden',
+    }}>
+      <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 8, background: 'var(--c-deep)', color: '#F0ECE2' }}>
+        <SiteIcon name="sliders" size={14}/>
+        <span style={{ fontSize: 13, fontWeight: 600 }}>Tweaks</span>
+        <span style={{ flex: 1 }}/>
+        <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'rgba(232,228,218,0.7)', cursor: 'pointer', fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
+      </div>
+      <Section title="Visual direction">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {directions.map(d => (
+            <button key={d.id} onClick={() => set('direction', d.id)} style={{
+              display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start',
+              padding: '9px 10px', borderRadius: 7, cursor: 'pointer', textAlign: 'left',
+              background: tweaks.direction === d.id ? 'var(--c-acc-lt)' : 'transparent',
+              border: tweaks.direction === d.id ? '1px solid rgba(194,105,59,0.35)' : '1px solid transparent',
+              fontFamily: 'inherit',
+            }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: tweaks.direction === d.id ? 'var(--c-acc-dk)' : 'var(--c-ink)' }}>{d.label}</span>
+              <span style={{ fontSize: 11, color: 'var(--c-mute)' }}>{d.sub}</span>
+            </button>
+          ))}
+        </div>
+      </Section>
+      <Section title="Options">
+        <Toggle label="Show app preview" k="showAppPreview"/>
+        <Toggle label="Show hero numbers" k="showNumbers"/>
+        <Toggle label="Dark footer" k="darkFooter"/>
+      </Section>
+    </div>
+  );
+};
+
+
+// ===== src/main.jsx =====
+// Main app entry — composes everything, wires Tweaks, persists state.
+
+function App() {
+  const [tweaks, setTweaks] = useState(() => {
+    try {
+      const stored = localStorage.getItem('mason-site-tweaks');
+      if (stored) return { ...window.__TWEAKS__, ...JSON.parse(stored) };
+    } catch {}
+    return window.__TWEAKS__;
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem('mason-site-tweaks', JSON.stringify(tweaks)); } catch {}
+  }, [tweaks]);
+
+  const [tweaksOpen, setTweaksOpen] = useState(false);
+
+  // Edit-mode protocol
+  useEffect(() => {
+    const handler = (e) => {
+      const d = e.data;
+      if (!d || typeof d !== 'object') return;
+      if (d.type === '__activate_edit_mode')   setTweaksOpen(true);
+      if (d.type === '__deactivate_edit_mode') setTweaksOpen(false);
+    };
+    window.addEventListener('message', handler);
+    try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch {}
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  // The Workshop direction is dark-hero — use deep nav to match.
+  const navTone = tweaks.direction === 'workshop' ? 'deep' : 'paper';
+
+  return (
+    <div data-screen-label="01 Mason Marketing Site" style={{ minHeight: '100vh', background: 'var(--c-page)' }}>
+      <SiteNav tone={navTone} onTweaks={() => setTweaksOpen(o => !o)} />
+
+      <HeroAndWorkflows
+        direction={tweaks.direction}
+        showAppPreview={tweaks.showAppPreview}
+        showNumbers={tweaks.showNumbers}
+      />
+
+      <HowItFits direction={tweaks.direction}/>
+      <MetricsTable/>
+      <Testimonial/>
+      <Pricing/>
+      <FAQ/>
+      <CTASection/>
+      <SiteFooter/>
+
+      {/* Floating Tweaks toggle button — also visible without the host toggle */}
+      <button
+        onClick={() => setTweaksOpen(o => !o)}
+        title="Tweaks"
+        style={{
+          position: 'fixed', right: 18, bottom: 18, zIndex: 9998,
+          width: 44, height: 44, borderRadius: '50%',
+          background: 'var(--c-deep)', color: '#F0ECE2',
+          border: '1px solid var(--c-deep-2)',
+          display: tweaksOpen ? 'none' : 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer',
+          boxShadow: '0 10px 24px -10px rgba(40,32,18,0.4)',
+        }}
+      >
+        <SiteIcon name="sliders" size={18}/>
+      </button>
+
+      {tweaksOpen && (
+        <TweaksPanel tweaks={tweaks} setTweaks={setTweaks} onClose={() => setTweaksOpen(false)}/>
+      )}
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App/>);
+
+
+  </script>
+
+</body>
+</html>
