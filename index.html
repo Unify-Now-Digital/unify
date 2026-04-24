@@ -359,6 +359,14 @@ window.CONTENT = {
     primary: { label: 'Book a workshop demo', href: '#demo' },
     secondary: { label: 'Email us a sample inbox', href: '#email' },
     contact: 'admin@unifynow.digital',
+    phoneGe: '+995 579 015 989',
+    phoneUk: '+44 7427 480641',
+    company: {
+      name: 'Unify Digital LLC',
+      address: '41 Zakaria Paliashvili Street, No. 41, Entrance 1, Tbilisi 0186, Georgia',
+      id: '405790078',
+      director: 'Arin Ibrisim-Melvin',
+    },
   },
   footer: {
     parent: 'A product of Unify Digital',
@@ -368,8 +376,15 @@ window.CONTENT = {
       { title: 'Company', links: ['About Unify', 'Journal', 'Press kit', 'Trade enquiries', 'Contact'] },
       { title: 'Trust', links: ['Security', 'BRAMM compliance', 'Privacy', 'Terms', 'Status'] },
     ],
-    address: 'Unify Digital Ltd. \u00b7 The Old Stoneworks, Bristol BS3 \u00b7 Reg. 14820318',
-    note: 'Built quietly in Bristol, for the workshops we know.',
+    legal: [
+      { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Terms of Service', href: '/terms' },
+      { label: 'Legal Notice', href: '/legal-notice' },
+      { label: 'Cookie Policy', href: '/cookies' },
+    ],
+    address: 'Unify Digital LLC \u00b7 41 Zakaria Paliashvili Street, No. 41, Entrance 1, Tbilisi 0186, Georgia \u00b7 ID 405790078',
+    copyright: '\u00a9 2026 Unify Digital LLC. All rights reserved.',
+    note: 'Built quietly for the workshops we know.',
   },
 };
 
@@ -1145,7 +1160,18 @@ window.CTASection = function CTASection() {
           <p style={{ marginTop: 20, fontSize: 17, color: 'rgba(255,255,255,0.85)', lineHeight: 1.55, maxWidth: 520 }}>{c.sub}</p>
           <div className="ff-mono" style={{ marginTop: 28, fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>
             <div>or email <a href={`mailto:${c.contact}`} style={{ color: '#fff', textDecoration: 'underline' }}>{c.contact}</a></div>
-            <div style={{ marginTop: 6 }}>or call us · 0117 422 0188</div>
+            <div style={{ marginTop: 6 }}>or call us · <a href={`tel:${c.phoneGe.replace(/\s/g, '')}`} style={{ color: '#fff', textDecoration: 'none' }}>{c.phoneGe}</a> (GE) · <a href={`tel:${c.phoneUk.replace(/\s/g, '')}`} style={{ color: '#fff', textDecoration: 'none' }}>{c.phoneUk}</a> (UK)</div>
+          </div>
+          <div className="ff-mono" style={{
+            marginTop: 32, padding: '16px 18px', borderRadius: 10,
+            background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)',
+            fontSize: 11.5, lineHeight: 1.65, color: 'rgba(255,255,255,0.78)', maxWidth: 460,
+          }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginBottom: 8 }}>Company details</div>
+            <div style={{ color: '#fff', fontWeight: 600 }}>{c.company.name}</div>
+            <div style={{ marginTop: 4 }}>{c.company.address}</div>
+            <div style={{ marginTop: 6 }}>Identification number · {c.company.id}</div>
+            <div>Director · {c.company.director}</div>
           </div>
         </div>
         <form id="book" onSubmit={onSubmit}
@@ -1232,6 +1258,19 @@ window.CTASection = function CTASection() {
 
 window.SiteFooter = function SiteFooter() {
   const f = CONTENT.footer;
+  const contactEmail = CONTENT.cta.contact;
+  const hrefFor = (colTitle, label) => {
+    if (colTitle === 'Trust') {
+      if (label === 'Privacy') return '/privacy';
+      if (label === 'Terms') return '/terms';
+      if (label === 'Security') return '/legal-notice';
+    }
+    if (colTitle === 'Company') {
+      if (label === 'Contact') return `mailto:${contactEmail}`;
+      if (label === 'Trade enquiries') return `mailto:${contactEmail}?subject=${encodeURIComponent('Trade enquiry')}`;
+    }
+    return '#';
+  };
   return (
     <footer style={{ background: 'var(--c-deep-2)', color: 'rgba(232,228,218,0.7)', padding: '64px 0 36px' }}>
       <div className="wrap">
@@ -1255,16 +1294,25 @@ window.SiteFooter = function SiteFooter() {
               <div className="eyebrow" style={{ color: 'rgba(232,228,218,0.45)', marginBottom: 14, fontSize: 10.5 }}>{col.title}</div>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 9 }}>
                 {col.links.map(l => (
-                  <li key={l}><a href="#" style={{ fontSize: 13, color: 'rgba(232,228,218,0.7)' }}>{l}</a></li>
+                  <li key={l}><a href={hrefFor(col.title, l)} style={{ fontSize: 13, color: 'rgba(232,228,218,0.7)' }}>{l}</a></li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
-        <div style={{ marginTop: 60, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-          <div className="ff-mono" style={{ fontSize: 11, color: 'rgba(232,228,218,0.45)' }}>{f.address}</div>
+        <div style={{ marginTop: 48, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexWrap: 'wrap', gap: 18, alignItems: 'center' }}>
+          {f.legal.map((l, i) => (
+            <React.Fragment key={l.href}>
+              {i > 0 && <span style={{ color: 'rgba(232,228,218,0.25)' }}>·</span>}
+              <a href={l.href} style={{ fontSize: 12, color: 'rgba(232,228,218,0.75)' }}>{l.label}</a>
+            </React.Fragment>
+          ))}
+        </div>
+        <div style={{ marginTop: 24, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+          <div className="ff-mono" style={{ fontSize: 11, color: 'rgba(232,228,218,0.45)', maxWidth: 640, lineHeight: 1.6 }}>{f.address}</div>
           <div className="ff-mono" style={{ fontSize: 11, color: 'rgba(232,228,218,0.45)' }}>unifynow.digital · v2.4</div>
         </div>
+        <div className="ff-mono" style={{ marginTop: 10, fontSize: 11, color: 'rgba(232,228,218,0.45)' }}>{f.copyright}</div>
       </div>
       <style>{`
         @media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr !important; } }
@@ -2018,6 +2066,74 @@ root.render(<App/>);
 
 
   </script>
+
+  <script>
+    // Cookie consent banner — vanilla JS, no dependencies.
+    // Stored choice in localStorage under 'ud-cookie-consent' ('accept' | 'reject').
+    // No analytics currently loaded; 'accept' is a no-op until tracking is wired.
+    (function () {
+      try {
+        var KEY = 'ud-cookie-consent';
+        if (localStorage.getItem(KEY)) return;
+
+        var wrap = document.createElement('div');
+        wrap.setAttribute('role', 'dialog');
+        wrap.setAttribute('aria-live', 'polite');
+        wrap.setAttribute('aria-label', 'Cookie consent');
+        wrap.id = 'ud-cookie-banner';
+        wrap.innerHTML =
+          '<div class="ud-cc-inner">' +
+            '<p class="ud-cc-text">We use cookies to keep the site working and, with your consent, to understand how it’s used. See our <a href="/cookies">Cookie Policy</a>.</p>' +
+            '<div class="ud-cc-actions">' +
+              '<button type="button" class="ud-cc-btn ud-cc-reject" data-choice="reject">Reject</button>' +
+              '<button type="button" class="ud-cc-btn ud-cc-accept" data-choice="accept">Accept</button>' +
+            '</div>' +
+          '</div>';
+        document.body.appendChild(wrap);
+
+        wrap.addEventListener('click', function (e) {
+          var t = e.target;
+          if (t && t.matches && t.matches('[data-choice]')) {
+            try { localStorage.setItem(KEY, t.getAttribute('data-choice')); } catch (_) {}
+            wrap.remove();
+          }
+        });
+      } catch (_) { /* privacy mode / storage disabled — skip silently */ }
+    })();
+  </script>
+  <style>
+    #ud-cookie-banner {
+      position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 10000;
+      background: #1A2D22; color: #F0ECE2;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      box-shadow: 0 20px 40px -20px rgba(0,0,0,0.45);
+      padding: 16px 18px;
+      font-family: 'DM Sans', -apple-system, system-ui, sans-serif;
+      display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+    }
+    #ud-cookie-banner .ud-cc-inner { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; flex: 1; }
+    #ud-cookie-banner .ud-cc-text { margin: 0; flex: 1; min-width: 260px; font-size: 13.5px; line-height: 1.55; color: rgba(240,236,226,0.85); }
+    #ud-cookie-banner .ud-cc-text a { color: #F0ECE2; text-decoration: underline; }
+    #ud-cookie-banner .ud-cc-actions { display: flex; gap: 10px; flex-shrink: 0; }
+    #ud-cookie-banner .ud-cc-btn {
+      font-family: inherit; font-size: 13px; font-weight: 600;
+      padding: 10px 18px; border-radius: 8px; cursor: pointer;
+      border: 1px solid rgba(240,236,226,0.35);
+      background: transparent; color: #F0ECE2;
+      min-width: 96px;
+    }
+    #ud-cookie-banner .ud-cc-accept {
+      background: #C2693B; border-color: #C2693B; color: #fff;
+    }
+    #ud-cookie-banner .ud-cc-btn:hover { filter: brightness(1.08); }
+    #ud-cookie-banner .ud-cc-btn:focus-visible { outline: 2px solid #F0ECE2; outline-offset: 2px; }
+    @media (max-width: 560px) {
+      #ud-cookie-banner { left: 12px; right: 12px; bottom: 12px; padding: 14px; }
+      #ud-cookie-banner .ud-cc-actions { width: 100%; }
+      #ud-cookie-banner .ud-cc-btn { flex: 1; }
+    }
+  </style>
 
 </body>
 </html>
