@@ -91,20 +91,20 @@
   article li { margin-bottom: 6px; }
   article strong { color: var(--c-ink); font-weight: 600; }
 
-  .site-footer { background: var(--c-deep-2); color: rgba(232,228,218,0.7); padding: 56px 0 32px; margin-top: 60px; }
-  .site-footer a { color: rgba(232,228,218,0.85); }
+  .site-footer { background: var(--c-paper); color: var(--c-ink-2); padding: 56px 0 32px; margin-top: 60px; border-top: 1px solid var(--c-line); }
+  .site-footer a { color: var(--c-ink-2); }
   .site-footer .footer-top { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
   .site-footer .footer-brand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 200px; }
-  .site-footer .footer-brand-mark { width: 32px; height: 32px; border-radius: 7px; background: var(--c-page); display: flex; align-items: center; justify-content: center; }
-  .site-footer .footer-brand-name { font-family: var(--ff-display); font-size: 22px; font-weight: 600; color: #F0ECE2; letter-spacing: -0.02em; }
-  .site-footer .legal-row { margin-top: 36px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-wrap: wrap; gap: 14px 18px; align-items: center; }
-  .site-footer .legal-row a { font-size: 12px; color: rgba(232,228,218,0.75); text-decoration: none; }
-  .site-footer .legal-row a:hover { color: #F0ECE2; text-decoration: underline; }
-  .site-footer .legal-row .dot { color: rgba(232,228,218,0.25); }
+  .site-footer .footer-brand-mark { width: 32px; height: 32px; border-radius: 7px; background: var(--c-deep); display: flex; align-items: center; justify-content: center; }
+  .site-footer .footer-brand-name { font-family: var(--ff-display); font-size: 22px; font-weight: 600; color: var(--c-ink); letter-spacing: -0.02em; }
+  .site-footer .legal-row { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--c-line); display: flex; flex-wrap: wrap; gap: 14px 18px; align-items: center; }
+  .site-footer .legal-row a { font-size: 12px; color: var(--c-ink-2); text-decoration: none; }
+  .site-footer .legal-row a:hover { color: var(--c-acc-dk); text-decoration: underline; }
+  .site-footer .legal-row .dot { color: var(--c-mute-2); }
   .site-footer .address-row { margin-top: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
-  .site-footer .address-row .address { font-family: var(--ff-mono); font-size: 11px; color: rgba(232,228,218,0.5); max-width: 640px; line-height: 1.6; }
-  .site-footer .address-row .domain { font-family: var(--ff-mono); font-size: 11px; color: rgba(232,228,218,0.5); }
-  .site-footer .copyright { font-family: var(--ff-mono); font-size: 11px; color: rgba(232,228,218,0.5); margin-top: 10px; }
+  .site-footer .address-row .address { font-family: var(--ff-mono); font-size: 11px; color: var(--c-mute); max-width: 640px; line-height: 1.6; }
+  .site-footer .address-row .domain { font-family: var(--ff-mono); font-size: 11px; color: var(--c-mute); }
+  .site-footer .copyright { font-family: var(--ff-mono); font-size: 11px; color: var(--c-mute); margin-top: 10px; }
 
   #ud-cookie-banner {
     position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 10000;
@@ -197,7 +197,7 @@
     <div class="footer-top">
       <div class="footer-brand">
         <span class="footer-brand-mark">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#243D2E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F2EEE5" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M4 21V11a8 8 0 0 1 16 0v10"/>
             <line x1="3" y1="21" x2="21" y2="21"/>
           </svg>
