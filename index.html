@@ -187,9 +187,9 @@ window.CONTENT = {
   ],
   hero: {
     eyebrow: 'For UK memorial masons',
-    headlineLead: 'Less paperwork.',
-    headlineMain: 'More time at the bench.',
-    sub: 'Mason is the quiet office manager that drafts your enquiries, proofs your inscriptions, and chases your permits — so the workshop can carry on cutting stone.',
+    headlineLead: 'The office manager',
+    headlineMain: 'your workshop never had to hire.',
+    sub: 'Mason reads every enquiry, drafts every quote, proofs every inscription, and chases every permit — quietly, in the workshop’s voice, ready for you to approve.',
     primary: { label: 'Book a workshop demo', href: '#demo' },
     secondary: { label: 'See it work', href: '#workflows' },
     proofPoints: [
@@ -2025,7 +2025,7 @@ function App() {
 
   return (
     <div data-screen-label="01 Mason Marketing Site" style={{ minHeight: '100vh', background: 'var(--c-page)' }}>
-      <SiteNav tone={navTone} onTweaks={() => setTweaksOpen(o => !o)} />
+      <SiteNav tone={navTone} />
 
       <HeroAndWorkflows
         direction={tweaks.direction}
@@ -2041,26 +2041,6 @@ function App() {
       <CTASection/>
       <SiteFooter/>
 
-      {/* Floating Tweaks toggle button — also visible without the host toggle */}
-      <button
-        onClick={() => setTweaksOpen(o => !o)}
-        title="Tweaks"
-        style={{
-          position: 'fixed', right: 18, bottom: 18, zIndex: 9998,
-          width: 44, height: 44, borderRadius: '50%',
-          background: 'var(--c-deep)', color: '#F0ECE2',
-          border: '1px solid var(--c-deep-2)',
-          display: tweaksOpen ? 'none' : 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer',
-          boxShadow: '0 10px 24px -10px rgba(40,32,18,0.4)',
-        }}
-      >
-        <SiteIcon name="sliders" size={18}/>
-      </button>
-
-      {tweaksOpen && (
-        <TweaksPanel tweaks={tweaks} setTweaks={setTweaks} onClose={() => setTweaksOpen(false)}/>
-      )}
     </div>
   );
 }
