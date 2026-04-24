@@ -337,17 +337,12 @@ window.CONTENT = {
   },
   footer: {
     parent: 'A product of Unify Digital',
-    cols: [
-      { title: 'Product', links: ['Enquiry Triage', 'Proof Review', 'Permit Chase', 'Logistics', 'Finance', 'Hub'] },
-      { title: 'Workshop', links: ['Pricing', 'Onboarding', 'Cemetery library', 'Integrations', 'Changelog'] },
-      { title: 'Company', links: ['About Unify', 'Journal', 'Press kit', 'Trade enquiries', 'Contact'] },
-      { title: 'Trust', links: ['Security', 'BRAMM compliance', 'Privacy', 'Terms', 'Status'] },
-    ],
     legal: [
       { label: 'Privacy Policy', href: '/privacy' },
       { label: 'Terms of Service', href: '/terms' },
       { label: 'Legal Notice', href: '/legal-notice' },
       { label: 'Cookie Policy', href: '/cookies' },
+      { label: 'Contact', href: 'mailto:admin@unifynow.digital' },
     ],
     address: 'Unify Digital LLC \u00b7 41 Zakaria Paliashvili Street, No. 41, Entrance 1, Tbilisi 0186, Georgia \u00b7 ID 405790078',
     copyright: '\u00a9 2026 Unify Digital LLC. All rights reserved.',
@@ -1221,49 +1216,23 @@ window.CTASection = function CTASection() {
 
 window.SiteFooter = function SiteFooter() {
   const f = CONTENT.footer;
-  const contactEmail = CONTENT.cta.contact;
-  const hrefFor = (colTitle, label) => {
-    if (colTitle === 'Trust') {
-      if (label === 'Privacy') return '/privacy';
-      if (label === 'Terms') return '/terms';
-      if (label === 'Security') return '/legal-notice';
-    }
-    if (colTitle === 'Company') {
-      if (label === 'Contact') return `mailto:${contactEmail}`;
-      if (label === 'Trade enquiries') return `mailto:${contactEmail}?subject=${encodeURIComponent('Trade enquiry')}`;
-    }
-    return '#';
-  };
   return (
-    <footer style={{ background: 'var(--c-deep-2)', color: 'rgba(232,228,218,0.7)', padding: '64px 0 36px' }}>
+    <footer style={{ background: 'var(--c-deep-2)', color: 'rgba(232,228,218,0.7)', padding: '56px 0 36px' }}>
       <div className="wrap">
-        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr repeat(4, 1fr)', gap: 40 }} className="footer-grid">
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 7, background: 'var(--c-page)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <MasonMark size={18} color="var(--c-deep)"/>
-              </div>
-              <div className="ff-display" style={{ fontSize: 22, fontWeight: 600, color: '#F0ECE2', letterSpacing: '-0.02em' }}>Mason</div>
-            </div>
-            <div style={{ fontSize: 13, color: 'rgba(232,228,218,0.55)', maxWidth: 260, lineHeight: 1.55 }}>
-              {f.note}
-            </div>
-            <div style={{ marginTop: 18, fontSize: 12, color: 'rgba(232,228,218,0.45)' }}>
-              {f.parent}
-            </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 7, background: 'var(--c-page)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <MasonMark size={18} color="var(--c-deep)"/>
           </div>
-          {f.cols.map(col => (
-            <div key={col.title}>
-              <div className="eyebrow" style={{ color: 'rgba(232,228,218,0.45)', marginBottom: 14, fontSize: 10.5 }}>{col.title}</div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 9 }}>
-                {col.links.map(l => (
-                  <li key={l}><a href={hrefFor(col.title, l)} style={{ fontSize: 13, color: 'rgba(232,228,218,0.7)' }}>{l}</a></li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <div className="ff-display" style={{ fontSize: 22, fontWeight: 600, color: '#F0ECE2', letterSpacing: '-0.02em' }}>Mason</div>
         </div>
-        <div style={{ marginTop: 48, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexWrap: 'wrap', gap: 18, alignItems: 'center' }}>
+        <div style={{ fontSize: 13, color: 'rgba(232,228,218,0.6)', maxWidth: 420, lineHeight: 1.55 }}>
+          {f.note}
+        </div>
+        <div style={{ marginTop: 10, fontSize: 12, color: 'rgba(232,228,218,0.45)' }}>
+          {f.parent}
+        </div>
+
+        <div style={{ marginTop: 36, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexWrap: 'wrap', gap: 18, alignItems: 'center' }}>
           {f.legal.map((l, i) => (
             <React.Fragment key={l.href}>
               {i > 0 && <span style={{ color: 'rgba(232,228,218,0.25)' }}>·</span>}
@@ -1271,16 +1240,12 @@ window.SiteFooter = function SiteFooter() {
             </React.Fragment>
           ))}
         </div>
-        <div style={{ marginTop: 24, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-          <div className="ff-mono" style={{ fontSize: 11, color: 'rgba(232,228,218,0.45)', maxWidth: 640, lineHeight: 1.6 }}>{f.address}</div>
+        <div style={{ marginTop: 20, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+          <div className="ff-mono" style={{ fontSize: 11, color: 'rgba(232,228,218,0.45)', maxWidth: 720, lineHeight: 1.6 }}>{f.address}</div>
           <div className="ff-mono" style={{ fontSize: 11, color: 'rgba(232,228,218,0.45)' }}>unifynow.digital · v2.4</div>
         </div>
         <div className="ff-mono" style={{ marginTop: 10, fontSize: 11, color: 'rgba(232,228,218,0.45)' }}>{f.copyright}</div>
       </div>
-      <style>{`
-        @media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr !important; } }
-        @media (max-width: 600px) { .footer-grid { grid-template-columns: 1fr !important; } }
-      `}</style>
     </footer>
   );
 };
