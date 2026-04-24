@@ -288,51 +288,14 @@ window.CONTENT = {
   },
   pricing: {
     eyebrow: 'Pricing',
-    title: 'Per workshop. Not per seat.',
-    sub: 'A small workshop pays once. The whole crew uses it. No add\u2011ons, no per\u2011message charges, no surprises at the end of the month.',
-    plans: [
-      {
-        name: 'Bench',
-        for: 'Solo masons & 2\u2011person workshops',
-        price: '£89',
-        per: '/ month',
-        features: [
-          'Enquiry Triage',
-          'Proof Review',
-          'Up to 40 active orders',
-          'Email + WhatsApp inbox',
-          'House\u2011style library',
-        ],
-      },
-      {
-        name: 'Workshop',
-        for: 'Established workshops, 3\u201312 staff',
-        price: '£249',
-        per: '/ month',
-        featured: true,
-        features: [
-          'Everything in Bench',
-          'Permit Chase + form library',
-          'Logistics planner & install board',
-          'Finance: invoicing & balance chase',
-          'Unlimited active orders',
-          'Connect Xero, Google Drive',
-        ],
-      },
-      {
-        name: 'Trade',
-        for: 'Multi\u2011site & funeral\u2011trade suppliers',
-        price: 'Talk to us',
-        per: '',
-        features: [
-          'Everything in Workshop',
-          'Trade accounts & price lists',
-          'Multi\u2011site dashboards',
-          'SSO + per\u2011branch reporting',
-          'Custom integrations',
-        ],
-      },
+    title: 'We only earn when the workshop does.',
+    sub: 'Mason is priced as a share of the work it helps bring in \u2014 not a per\u2011seat licence, not a per\u2011message charge, not a setup fee. If the quarter is quiet, so is your invoice.',
+    points: [
+      { title: 'No seat charges',                  body: 'The whole crew is on it \u2014 office, masons, installers. One workshop, one arrangement.' },
+      { title: 'No setup or onboarding fees',      body: 'We set up your cemetery library, your house style, and your inbox at no cost. You pay once it starts earning.' },
+      { title: 'Cancel at the end of any quarter', body: 'No annual lock\u2011in. If Mason isn\u2019t earning its keep, we don\u2019t want the bill on your desk.' },
     ],
+    cta: { label: 'Book a workshop call', href: '#demo' },
   },
   faq: [
     {
@@ -1012,53 +975,46 @@ window.Pricing = function Pricing() {
   return (
     <section id="pricing" style={{ padding: '110px 0', borderTop: '1px solid var(--c-line)' }}>
       <div className="wrap">
-        <div style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto 56px' }}>
+        <div style={{ textAlign: 'center', maxWidth: 760, margin: '0 auto 56px' }}>
           <div className="eyebrow" style={{ marginBottom: 16 }}>{c.eyebrow}</div>
-          <h2 className="ff-display" style={{ margin: 0, fontSize: 'clamp(32px, 4vw, 48px)', lineHeight: 1.05, letterSpacing: '-0.022em', fontWeight: 500 }}>{c.title}</h2>
-          <p style={{ marginTop: 18, fontSize: 16, color: 'var(--c-mute)', lineHeight: 1.6 }}>{c.sub}</p>
+          <h2 className="ff-display" style={{
+            margin: 0, fontSize: 'clamp(32px, 4.2vw, 52px)', lineHeight: 1.05,
+            letterSpacing: '-0.022em', fontWeight: 500, textWrap: 'balance',
+          }}>{c.title}</h2>
+          <p style={{ marginTop: 20, fontSize: 17, color: 'var(--c-mute)', lineHeight: 1.6, textWrap: 'pretty' }}>{c.sub}</p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }} className="grid-3">
-          {c.plans.map(p => (
-            <div key={p.name} style={{
-              padding: 32, borderRadius: 12,
-              background: p.featured ? 'var(--c-deep)' : 'var(--c-paper)',
-              color: p.featured ? '#F0ECE2' : 'var(--c-ink)',
-              border: p.featured ? '1px solid var(--c-deep-2)' : '1px solid var(--c-line)',
-              position: 'relative',
-            }}>
-              {p.featured && (
-                <div style={{
-                  position: 'absolute', top: -10, left: 24,
-                  background: 'var(--c-acc)', color: '#fff',
-                  padding: '3px 10px', borderRadius: 12, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
-                }}>Most workshops</div>
-              )}
-              <div className="ff-display" style={{ fontSize: 26, fontWeight: 500, letterSpacing: '-0.015em' }}>{p.name}</div>
-              <div style={{ fontSize: 13, color: p.featured ? 'rgba(232,228,218,0.65)' : 'var(--c-mute)', marginTop: 4 }}>{p.for}</div>
-              <div style={{ marginTop: 24, display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                <span className="ff-display" style={{ fontSize: 40, fontWeight: 500, letterSpacing: '-0.02em' }}>{p.price}</span>
-                <span style={{ fontSize: 14, color: p.featured ? 'rgba(232,228,218,0.55)' : 'var(--c-mute)' }}>{p.per}</span>
-              </div>
-              <div style={{ height: 1, background: p.featured ? 'rgba(255,255,255,0.12)' : 'var(--c-line)', margin: '24px 0' }}/>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {p.features.map(f => (
-                  <li key={f} style={{ display: 'flex', gap: 10, fontSize: 13.5, color: p.featured ? 'rgba(232,228,218,0.85)' : 'var(--c-ink-2)' }}>
-                    <span style={{ color: 'var(--c-acc)', flexShrink: 0, marginTop: 2 }}><SiteIcon name="check" size={14} stroke={2}/></span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <a href="#demo" style={{
-                display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6,
-                marginTop: 28, padding: '12px 18px', borderRadius: 8, fontSize: 14, fontWeight: 600,
-                background: p.featured ? 'var(--c-acc)' : 'transparent',
-                color: p.featured ? '#fff' : 'var(--c-ink)',
-                border: p.featured ? '1px solid var(--c-acc)' : '1px solid var(--c-line-2)',
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1,
+          background: 'var(--c-line)', border: '1px solid var(--c-line)',
+          borderRadius: 12, overflow: 'hidden', maxWidth: 1040, margin: '0 auto',
+        }} className="grid-3">
+          {c.points.map((p, i) => (
+            <div key={p.title} style={{ background: 'var(--c-paper)', padding: '32px 28px' }}>
+              <div className="ff-mono" style={{
+                fontSize: 10.5, fontWeight: 600, letterSpacing: '0.1em',
+                textTransform: 'uppercase', color: 'var(--c-acc)', marginBottom: 14,
               }}>
-                {p.price === 'Talk to us' ? 'Get in touch' : 'Start a 30-day trial'}
-              </a>
+                {String(i + 1).padStart(2, '0')}
+              </div>
+              <div className="ff-display" style={{
+                fontSize: 20, fontWeight: 500, lineHeight: 1.2,
+                letterSpacing: '-0.015em', marginBottom: 10,
+              }}>
+                {p.title}
+              </div>
+              <div style={{ fontSize: 14, color: 'var(--c-mute)', lineHeight: 1.6 }}>{p.body}</div>
             </div>
           ))}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}>
+          <a href={c.cta.href} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '14px 22px', borderRadius: 9,
+            background: 'var(--c-acc)', color: '#fff',
+            fontSize: 15, fontWeight: 600,
+          }}>
+            {c.cta.label} <SiteIcon name="arrowRight" size={16}/>
+          </a>
         </div>
       </div>
       <style>{`
