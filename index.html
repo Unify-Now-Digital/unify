@@ -199,8 +199,9 @@ window.CONTENT = {
     ],
   },
   trust: {
-    label: 'Built with these workshops',
-    logos: ['Churchill Memorials'],
+    label: 'Mason is in the workshop at',
+    client: 'Churchill Memorials',
+    context: 'Bristol · four masons · running since Q1 2026',
   },
   workflows: {
     eyebrow: 'Three windows. One quiet office.',
@@ -838,18 +839,21 @@ window.TrustStrip = function TrustStrip({ tone = 'paper' }) {
       borderBottom: `1px solid ${isDeep ? 'rgba(255,255,255,0.08)' : 'var(--c-line)'}`,
       background: isDeep ? 'var(--c-deep-2)' : 'transparent',
     }}>
-      <div className="wrap" style={{ display: 'flex', alignItems: 'center', gap: 30, flexWrap: 'wrap' }}>
+      <div className="wrap" style={{ display: 'flex', alignItems: 'baseline', gap: 20, flexWrap: 'wrap' }}>
         <div className="eyebrow" style={{ color: isDeep ? 'rgba(232,228,218,0.55)' : undefined, flexShrink: 0 }}>
           {CONTENT.trust.label}
         </div>
-        <div style={{ display: 'flex', gap: 36, flexWrap: 'wrap', alignItems: 'center', flex: 1 }}>
-          {CONTENT.trust.logos.map(l => (
-            <div key={l} style={{
-              fontFamily: 'var(--ff-display)', fontSize: 17, fontWeight: 500,
-              color: isDeep ? 'rgba(232,228,218,0.7)' : 'var(--c-ink-2)',
-              letterSpacing: '-0.005em', opacity: 0.85,
-            }}>{l}</div>
-          ))}
+        <div style={{
+          fontFamily: 'var(--ff-display)', fontSize: 20, fontWeight: 500,
+          color: isDeep ? '#F0ECE2' : 'var(--c-ink)',
+          letterSpacing: '-0.005em',
+        }}>
+          {CONTENT.trust.client}
+        </div>
+        <div style={{
+          fontSize: 13, color: isDeep ? 'rgba(232,228,218,0.6)' : 'var(--c-mute)',
+        }}>
+          {CONTENT.trust.context}
         </div>
       </div>
     </section>
