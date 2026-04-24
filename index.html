@@ -1279,47 +1279,47 @@ window.SiteFooter = function SiteFooter() {
     return '#';
   };
   return (
-    <footer style={{ background: 'var(--c-deep-2)', color: 'rgba(232,228,218,0.7)', padding: '64px 0 36px' }}>
+    <footer style={{ background: 'var(--c-paper)', color: 'var(--c-ink-2)', padding: '72px 0 40px', borderTop: '1px solid var(--c-line)' }}>
       <div className="wrap">
         <div style={{ display: 'grid', gridTemplateColumns: '1.4fr repeat(4, 1fr)', gap: 40 }} className="footer-grid">
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 7, background: 'var(--c-page)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <MasonMark size={18} color="var(--c-deep)"/>
+              <div style={{ width: 32, height: 32, borderRadius: 7, background: 'var(--c-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <MasonMark size={18} color="var(--c-page)"/>
               </div>
-              <div className="ff-display" style={{ fontSize: 22, fontWeight: 600, color: '#F0ECE2', letterSpacing: '-0.02em' }}>Mason</div>
+              <div className="ff-display" style={{ fontSize: 22, fontWeight: 600, color: 'var(--c-ink)', letterSpacing: '-0.02em' }}>Mason</div>
             </div>
-            <div style={{ fontSize: 13, color: 'rgba(232,228,218,0.55)', maxWidth: 260, lineHeight: 1.55 }}>
+            <div style={{ fontSize: 13, color: 'var(--c-ink-2)', maxWidth: 260, lineHeight: 1.55 }}>
               {f.note}
             </div>
-            <div style={{ marginTop: 18, fontSize: 12, color: 'rgba(232,228,218,0.45)' }}>
+            <div style={{ marginTop: 18, fontSize: 12, color: 'var(--c-mute)' }}>
               {f.parent}
             </div>
           </div>
           {f.cols.map(col => (
             <div key={col.title}>
-              <div className="eyebrow" style={{ color: 'rgba(232,228,218,0.45)', marginBottom: 14, fontSize: 10.5 }}>{col.title}</div>
+              <div className="eyebrow" style={{ marginBottom: 14, fontSize: 10.5 }}>{col.title}</div>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 9 }}>
                 {col.links.map(l => (
-                  <li key={l}><a href={hrefFor(col.title, l)} style={{ fontSize: 13, color: 'rgba(232,228,218,0.7)' }}>{l}</a></li>
+                  <li key={l}><a href={hrefFor(col.title, l)} style={{ fontSize: 13, color: 'var(--c-ink-2)', textDecoration: 'none' }}>{l}</a></li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
-        <div style={{ marginTop: 48, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexWrap: 'wrap', gap: 18, alignItems: 'center' }}>
+        <div style={{ marginTop: 56, paddingTop: 20, borderTop: '1px solid var(--c-line)', display: 'flex', flexWrap: 'wrap', gap: 18, alignItems: 'center' }}>
           {f.legal.map((l, i) => (
             <React.Fragment key={l.href}>
-              {i > 0 && <span style={{ color: 'rgba(232,228,218,0.25)' }}>·</span>}
-              <a href={l.href} style={{ fontSize: 12, color: 'rgba(232,228,218,0.75)' }}>{l.label}</a>
+              {i > 0 && <span style={{ color: 'var(--c-mute-2)' }}>·</span>}
+              <a href={l.href} style={{ fontSize: 12, color: 'var(--c-ink-2)', textDecoration: 'none' }}>{l.label}</a>
             </React.Fragment>
           ))}
         </div>
         <div style={{ marginTop: 24, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-          <div className="ff-mono" style={{ fontSize: 11, color: 'rgba(232,228,218,0.45)', maxWidth: 640, lineHeight: 1.6 }}>{f.address}</div>
-          <div className="ff-mono" style={{ fontSize: 11, color: 'rgba(232,228,218,0.45)' }}>unifynow.digital · v2.4</div>
+          <div className="ff-mono" style={{ fontSize: 11, color: 'var(--c-mute)', maxWidth: 640, lineHeight: 1.6 }}>{f.address}</div>
+          <div className="ff-mono" style={{ fontSize: 11, color: 'var(--c-mute)' }}>unifynow.digital · v2.4</div>
         </div>
-        <div className="ff-mono" style={{ marginTop: 10, fontSize: 11, color: 'rgba(232,228,218,0.45)' }}>{f.copyright}</div>
+        <div className="ff-mono" style={{ marginTop: 10, fontSize: 11, color: 'var(--c-mute)' }}>{f.copyright}</div>
       </div>
       <style>{`
         @media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr !important; } }
