@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-accent="indigo">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -22,12 +22,16 @@
     --c-deep:     #243D2E;
     --c-deep-2:   #1A2D22;
     --c-acc:      #C2693B;
+    --c-acc-lt:   #F5E8DC;
     --c-acc-dk:   #8A3A18;
     --ff-serif:   'Lora', Georgia, serif;
     --ff-display: 'Fraunces', Georgia, serif;
     --ff-body:    'DM Sans', -apple-system, system-ui, sans-serif;
     --ff-mono:    'JetBrains Mono', ui-monospace, monospace;
   }
+  html[data-accent="slate"]  { --c-acc: #5E6C7A; --c-acc-dk: #374151; --c-acc-lt: #E6EAEF; }
+  html[data-accent="moss"]   { --c-acc: #6B7A48; --c-acc-dk: #404A28; --c-acc-lt: #ECEFDF; }
+  html[data-accent="indigo"] { --c-acc: #4A5A8A; --c-acc-dk: #2A3560; --c-acc-lt: #E2E6F2; }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
@@ -117,7 +121,7 @@
   #ud-cookie-banner .ud-cc-text a { color: #F0ECE2; text-decoration: underline; }
   #ud-cookie-banner .ud-cc-actions { display: flex; gap: 10px; flex-shrink: 0; }
   #ud-cookie-banner .ud-cc-btn { font-family: inherit; font-size: 13px; font-weight: 600; padding: 10px 18px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(240,236,226,0.35); background: transparent; color: #F0ECE2; min-width: 96px; }
-  #ud-cookie-banner .ud-cc-accept { background: #C2693B; border-color: #C2693B; color: #fff; }
+  #ud-cookie-banner .ud-cc-accept { background: var(--c-acc); border-color: var(--c-acc); color: #fff; }
   #ud-cookie-banner .ud-cc-btn:hover { filter: brightness(1.08); }
   #ud-cookie-banner .ud-cc-btn:focus-visible { outline: 2px solid #F0ECE2; outline-offset: 2px; }
   @media (max-width: 560px) {

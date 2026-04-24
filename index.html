@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-accent="indigo">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -38,6 +38,12 @@
     --radius:     10px;
     --radius-sm:  6px;
   }
+
+  /* Brand-accent swaps — applied via data-accent on <html>. Amber semantic stays
+     terracotta regardless of accent. */
+  html[data-accent="slate"]  { --c-acc: #5E6C7A; --c-acc-dk: #374151; --c-acc-lt: #E6EAEF; }
+  html[data-accent="moss"]   { --c-acc: #6B7A48; --c-acc-dk: #404A28; --c-acc-lt: #ECEFDF; }
+  html[data-accent="indigo"] { --c-acc: #4A5A8A; --c-acc-dk: #2A3560; --c-acc-lt: #E2E6F2; }
 
   * { box-sizing: border-box; }
   html, body { margin:0; padding:0; }
@@ -992,7 +998,7 @@ window.Testimonial = function Testimonial() {
           &ldquo;{t.quote}&rdquo;
         </blockquote>
         <div style={{ marginTop: 36, display: 'inline-flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(194,105,59,0.2)', color: 'var(--c-acc-dk)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700 }}>AT</div>
+          <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--c-acc-lt)', color: 'var(--c-acc-dk)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700 }}>AT</div>
           <div style={{ textAlign: 'left' }}>
             <div style={{ fontWeight: 600, fontSize: 15 }}>{t.name}</div>
             <div style={{ fontSize: 13, color: 'var(--c-mute)' }}>{t.role} · {t.location}</div>
@@ -1518,7 +1524,7 @@ function WorkshopDirection({ showAppPreview, showNumbers }) {
         <div aria-hidden style={{
           position: 'absolute', inset: 0, opacity: 0.3,
           background:
-            'radial-gradient(circle at 30% 30%, rgba(194,105,59,0.18) 0, transparent 40%),' +
+            'radial-gradient(circle at 30% 30%, rgba(74,90,138,0.22) 0, transparent 40%),' +
             'radial-gradient(circle at 80% 70%, rgba(232,228,218,0.06) 0, transparent 35%)',
         }}/>
         <div className="wrap" style={{ position: 'relative' }}>
@@ -1966,7 +1972,7 @@ window.TweaksPanel = function TweaksPanel({ tweaks, setTweaks, onClose }) {
               display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start',
               padding: '9px 10px', borderRadius: 7, cursor: 'pointer', textAlign: 'left',
               background: tweaks.direction === d.id ? 'var(--c-acc-lt)' : 'transparent',
-              border: tweaks.direction === d.id ? '1px solid rgba(194,105,59,0.35)' : '1px solid transparent',
+              border: tweaks.direction === d.id ? '1px solid var(--c-acc)' : '1px solid transparent',
               fontFamily: 'inherit',
             }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: tweaks.direction === d.id ? 'var(--c-acc-dk)' : 'var(--c-ink)' }}>{d.label}</span>
@@ -2124,7 +2130,7 @@ root.render(<App/>);
       min-width: 96px;
     }
     #ud-cookie-banner .ud-cc-accept {
-      background: #C2693B; border-color: #C2693B; color: #fff;
+      background: var(--c-acc); border-color: var(--c-acc); color: #fff;
     }
     #ud-cookie-banner .ud-cc-btn:hover { filter: brightness(1.08); }
     #ud-cookie-banner .ud-cc-btn:focus-visible { outline: 2px solid #F0ECE2; outline-offset: 2px; }
