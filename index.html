@@ -184,8 +184,6 @@ window.CONTENT = {
     { label: 'Workflows', href: '#workflows' },
     { label: 'How it fits', href: '#how' },
     { label: 'Pricing', href: '#pricing' },
-    { label: 'For workshops', href: '#workshops' },
-    { label: 'Journal', href: '#journal' },
   ],
   hero: {
     eyebrow: 'For UK memorial masons',
@@ -1074,7 +1072,7 @@ window.FAQ = function FAQ() {
   const [open, setOpen] = useState(0);
   return (
     <section style={{ padding: '110px 0', borderTop: '1px solid var(--c-line)' }}>
-      <div className="wrap" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 60 }} className="grid-1-2">
+      <div className="wrap grid-1-2" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 60 }}>
         <div>
           <div className="eyebrow" style={{ marginBottom: 16 }}>Questions</div>
           <h2 className="ff-display" style={{ margin: 0, fontSize: 'clamp(28px, 3.5vw, 40px)', lineHeight: 1.1, letterSpacing: '-0.022em', fontWeight: 500 }}>
@@ -1157,7 +1155,7 @@ window.CTASection = function CTASection() {
       padding: '110px 0', position: 'relative', overflow: 'hidden',
       background: 'var(--c-acc)', color: '#fff',
     }}>
-      <div className="wrap" style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 60, alignItems: 'flex-start' }} className="grid-3-2">
+      <div className="wrap grid-3-2" style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 60, alignItems: 'flex-start' }}>
         <div>
           <div className="eyebrow" style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 14 }}>{c.eyebrow}</div>
           <h2 className="ff-display" style={{ margin: 0, fontSize: 'clamp(34px, 4.5vw, 56px)', lineHeight: 1.04, letterSpacing: '-0.022em', fontWeight: 500, color: '#fff', textWrap: 'balance' }}>
