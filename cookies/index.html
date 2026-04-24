@@ -33,11 +33,14 @@
   html[data-accent="moss"]   { --c-acc: #6B7A48; --c-acc-dk: #404A28; --c-acc-lt: #ECEFDF; }
   html[data-accent="indigo"] { --c-acc: #4A5A8A; --c-acc-dk: #2A3560; --c-acc-lt: #E2E6F2; }
   * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   html, body { margin: 0; padding: 0; }
-  body { font-family: var(--ff-body); color: var(--c-ink); background: var(--c-page); line-height: 1.6; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  a { color: var(--c-acc-dk); text-decoration: underline; text-underline-offset: 2px; }
+  body { font-family: var(--ff-body); color: var(--c-ink); background: var(--c-page); line-height: 1.6; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; overflow-x: clip; }
+  a { color: var(--c-acc-dk); text-decoration: underline; text-underline-offset: 2px; -webkit-tap-highlight-color: transparent; }
   a:hover { color: var(--c-acc); }
+  button { -webkit-tap-highlight-color: transparent; }
   .wrap { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+  @media (max-width: 560px) { .wrap { padding: 0 18px; } main { padding: 40px 0 56px !important; } article h1 { font-size: clamp(32px, 9vw, 44px) !important; } article h2 { font-size: 22px !important; margin-top: 32px !important; } }
   .site-header { background: var(--c-paper); border-bottom: 1px solid var(--c-line); padding: 18px 0; position: sticky; top: 0; z-index: 50; }
   .site-header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .brand { display: flex; align-items: center; gap: 10px; color: var(--c-ink); text-decoration: none; }
