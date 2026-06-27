@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CM Balance Tracker — 27 June 2026</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161a22; --panel-2:#1d2230; --border:#2a3140;
+    --ink:#e8ecf3; --muted:#9aa5b8; --line:#293040;
+    --good:#1fb86b; --warn:#f59e0b; --warn-2:#fb923c; --bad:#ef4444; --info:#3b82f6;
+    --purple:#a78bfa; --teal:#2dd4bf; --gray:#6b7280;
+    --good-bg:rgba(31,184,107,.12); --warn-bg:rgba(245,158,11,.12);
+    --warn2-bg:rgba(251,146,60,.12); --bad-bg:rgba(239,68,68,.12);
+    --info-bg:rgba(59,130,246,.12); --purple-bg:rgba(167,139,250,.12);
+    --teal-bg:rgba(45,212,191,.12); --gray-bg:rgba(107,114,128,.16);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+    padding:24px; max-width:1280px; margin:0 auto;
+  }
+  h1{font-size:24px; margin:0 0 4px; letter-spacing:-.02em}
+  h2{font-size:18px; margin:32px 0 12px; letter-spacing:-.01em; color:var(--ink)}
+  h3{font-size:15px; margin:0 0 8px; letter-spacing:-.01em}
+  .sub{color:var(--muted); font-size:13px}
+  a{color:#7dd3fc; text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  .top{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin:20px 0 8px;
+  }
+  .kpi{
+    background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:14px 16px;
+  }
+  .kpi .lbl{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted)}
+  .kpi .val{font-size:22px; font-weight:600; margin-top:4px; letter-spacing:-.01em}
+  .kpi .meta{font-size:12px; color:var(--muted); margin-top:2px}
+
+  .decisions{
+    background:var(--panel); border:1px solid var(--border); border-left:3px solid var(--warn);
+    border-radius:10px; padding:14px 18px; margin:18px 0;
+  }
+  .decisions h2{margin:0 0 8px; font-size:15px}
+  .decisions ol{margin:0; padding-left:18px}
+  .decisions li{margin:4px 0}
+  .decisions strong{color:var(--warn-2)}
+
+  .filters{
+    display:flex; flex-wrap:wrap; gap:6px; margin:18px 0 10px;
+  }
+  .filters button{
+    background:var(--panel); color:var(--ink); border:1px solid var(--border); border-radius:999px;
+    padding:6px 12px; font:inherit; font-size:12.5px; cursor:pointer;
+  }
+  .filters button:hover{border-color:#3a4254}
+  .filters button.active{background:#252b3a; border-color:#3f4858}
+
+  table{width:100%; border-collapse:collapse; background:var(--panel); border-radius:10px; overflow:hidden; border:1px solid var(--border)}
+  th,td{padding:9px 12px; text-align:left; border-bottom:1px solid var(--line); vertical-align:middle; font-size:13px}
+  th{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); background:#11151c; font-weight:600}
+  tr:last-child td{border-bottom:none}
+  td.num{text-align:right; font-variant-numeric:tabular-nums; font-feature-settings:"tnum"}
+  td.cust{font-weight:600}
+  .badge{
+    display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600;
+    white-space:nowrap;
+  }
+  .b-good{background:var(--good-bg); color:#4ade80}
+  .b-warn{background:var(--warn-bg); color:var(--warn)}
+  .b-warn2{background:var(--warn2-bg); color:#fdba74}
+  .b-bad{background:var(--bad-bg); color:#fca5a5}
+  .b-info{background:var(--info-bg); color:#93c5fd}
+  .b-purple{background:var(--purple-bg); color:#c4b5fd}
+  .b-teal{background:var(--teal-bg); color:#5eead4}
+  .b-gray{background:var(--gray-bg); color:#9aa5b8}
+  .b-hi{background:rgba(31,184,107,.18); color:#86efac}
+  .b-med{background:rgba(245,158,11,.18); color:#fcd34d}
+  .b-low{background:rgba(239,68,68,.18); color:#fca5a5}
+
+  details.card{
+    background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:0; margin:8px 0;
+    overflow:hidden;
+  }
+  details.card[open]{border-color:#3a4254}
+  details.card>summary{
+    cursor:pointer; list-style:none; padding:12px 16px;
+    display:grid; grid-template-columns:30px 1fr 130px 120px 110px 70px; gap:10px; align-items:center;
+  }
+  details.card>summary::-webkit-details-marker{display:none}
+  details.card>summary:hover{background:#1a1f2b}
+  details.card>summary .arrow{color:var(--muted); transition:transform .15s}
+  details.card[open]>summary .arrow{transform:rotate(90deg)}
+  details.card>summary .name{font-weight:600; font-size:14px}
+  details.card>summary .name small{color:var(--muted); font-weight:400}
+  details.card>summary .num{text-align:right; font-variant-numeric:tabular-nums; font-feature-settings:"tnum"; color:var(--muted); font-size:12.5px}
+  details.card>summary .num strong{color:var(--ink); font-size:14px}
+
+  .body{
+    padding:14px 18px 18px; border-top:1px solid var(--line); background:#13171f;
+    display:grid; grid-template-columns:1.4fr 1fr; gap:18px;
+  }
+  .body .col h4{margin:0 0 6px; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600}
+  .body dl{margin:0 0 12px; display:grid; grid-template-columns:auto 1fr; column-gap:14px; row-gap:5px; font-size:13px}
+  .body dt{color:var(--muted)}
+  .body dd{margin:0}
+  .body dd.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:12.5px}
+  .quote{background:#0e1218; border-left:2px solid var(--info); padding:8px 12px; margin:6px 0; border-radius:0 6px 6px 0; font-size:12.5px; color:#cdd5e3}
+  .quote .who{color:var(--muted); font-size:11px; display:block; margin-top:4px}
+  .action{background:#0e1218; border:1px dashed #3a4254; padding:10px 12px; border-radius:8px; font-size:13px; margin-top:8px}
+  .action strong{color:#86efac}
+  .action.warn strong{color:#fcd34d}
+  .action.bad strong{color:#fca5a5}
+  .flag{display:inline-block; padding:1px 7px; border-radius:4px; font-size:11px; margin-right:5px}
+
+  .legend{display:flex; flex-wrap:wrap; gap:8px; color:var(--muted); font-size:12px; margin:10px 0 0}
+  .legend span{display:inline-flex; align-items:center; gap:5px}
+  .dot{width:9px; height:9px; border-radius:50%}
+
+  .footer{margin-top:36px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted); font-size:12px}
+
+  @media (max-width:1000px){
+    .top{grid-template-columns:repeat(2,1fr)}
+    details.card>summary{grid-template-columns:24px 1fr 100px; row-gap:6px}
+    details.card>summary .col-permit, details.card>summary .col-balance{display:none}
+    .body{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>CM Balance Tracker</h1>
+  <div class="sub">27 June 2026 · 26 lettered orders reconciled across Stripe → ClickUp → Aylin's comments → Gmail · GHL not connected this run</div>
+</header>
+
+<div class="top">
+  <div class="kpi"><div class="lbl">Reviewed</div><div class="val">26</div><div class="meta">customers in scope</div></div>
+  <div class="kpi"><div class="lbl">Ready to draft (🟢)</div><div class="val">£8,369</div><div class="meta">7 clean balances</div></div>
+  <div class="kpi"><div class="lbl">+ permit credit (🟡)</div><div class="val">£1,228</div><div class="meta">2 with adjustments</div></div>
+  <div class="kpi"><div class="lbl">On hold (⏸)</div><div class="val">7</div><div class="meta">~£6.4k blocked</div></div>
+  <div class="kpi"><div class="lbl">Realistic 30‑day</div><div class="val">£10,140</div><div class="meta">drafts + revisions</div></div>
+</div>
+
+<div class="decisions">
+  <h2>⚠ 3 decisions before I create the Stripe drafts</h2>
+  <ol>
+    <li><strong>Helen Allen £25.90 + Keely Whailin £235 permit credits</strong> — negative line on the balance invoice, or separate Stripe refunds against the deposit?</li>
+    <li><strong>Binil Baby £201 permit shortfall</strong> — absorb, or add to balance?</li>
+    <li><strong>Leanne Smith concrete landing + Binil Baby cross etch</strong> — draft balance now and bill the scope adds separately, or hold until priced?</li>
+  </ol>
+</div>
+
+<div class="filters" id="filters">
+  <button data-f="all" class="active">All 26</button>
+  <button data-f="green">🟢 Ready (7)</button>
+  <button data-f="yellow">🟡 Permit credit (2)</button>
+  <button data-f="orange">🟠 Revise existing (1)</button>
+  <button data-f="red">🔴 Already paid (1)</button>
+  <button data-f="hold">⏸ Hold (7)</button>
+  <button data-f="ok">✅ Out of scope (4)</button>
+  <button data-f="anom">❓ Anomaly (5)</button>
+</div>
+
+<!-- Sticky summary table -->
+<h2>Action queue</h2>
+<table>
+  <thead><tr>
+    <th>Status</th><th>Customer</th><th>Deceased</th><th>Deposit inv</th>
+    <th class="num">Order £</th><th class="num">Permit £</th><th class="num">Balance £</th><th>Confidence</th><th>Action</th>
+  </tr></thead>
+  <tbody>
+    <tr><td><span class="badge b-good">🟢 Clean</span></td><td class="cust">Janette Etheridge</td><td>Dorothy Lodge</td><td><a href="https://dashboard.stripe.com/invoices/in_1T53QiCPXsXtUO9yfaXBZvGJ">-0416</a></td><td class="num">1,656.90</td><td class="num">110</td><td class="num"><b>828.45</b></td><td><span class="badge b-hi">HIGH</span></td><td>Draft balance</td></tr>
+    <tr><td><span class="badge b-good">🟢 Clean</span></td><td class="cust">Leonard Lewis</td><td>Lynnette Ebanks</td><td><a href="https://dashboard.stripe.com/invoices/in_1SSaRyCPXsXtUO9y7ToW0zAo">-0293</a></td><td class="num">1,787.50</td><td class="num">588</td><td class="num"><b>893.75</b></td><td><span class="badge b-hi">HIGH</span></td><td>Draft balance</td></tr>
+    <tr><td><span class="badge b-good">🟢 Clean</span></td><td class="cust">Sheara Carl Singh</td><td>TBC</td><td><a href="https://dashboard.stripe.com/invoices/in_1SVBV8CPXsXtUO9y7rd3xsgR">-0305</a></td><td class="num">1,804.50</td><td class="num">207</td><td class="num"><b>902.25</b></td><td><span class="badge b-hi">HIGH</span></td><td>Draft balance</td></tr>
+    <tr><td><span class="badge b-good">🟢 Clean</span></td><td class="cust">Sharmine Goni</td><td>Jasmine Sulthana Goni</td><td><a href="https://dashboard.stripe.com/invoices/in_1SmvhHCPXsXtUO9ypgl3Ozcu">-0358</a></td><td class="num">1,469.50</td><td class="num">240</td><td class="num"><b>734.75</b></td><td><span class="badge b-hi">HIGH</span></td><td>Draft balance</td></tr>
+    <tr><td><span class="badge b-good">🟢 Clean</span></td><td class="cust">Helen Fricker</td><td>Ronald Frank Mouland</td><td><a href="https://dashboard.stripe.com/invoices/in_1SCeq4CPXsXtUO9yiXoZfN3G">-0245</a></td><td class="num">1,750.00</td><td class="num">0</td><td class="num"><b>875.00</b></td><td><span class="badge b-hi">HIGH</span></td><td>Draft balance · 4 duplicate cus_ to clean up</td></tr>
+    <tr><td><span class="badge b-good">🟢 Scope flag</span></td><td class="cust">Leanne Smith</td><td>TBC</td><td><a href="https://dashboard.stripe.com/invoices/in_1S6ac1CPXsXtUO9yFmWoaLq3">-0220</a></td><td class="num">3,260.00</td><td class="num">550</td><td class="num"><b>1,630.00</b></td><td><span class="badge b-med">MED</span></td><td>Draft balance; concrete landing TBC</td></tr>
+    <tr><td><span class="badge b-good">🟢 Scope flag</span></td><td class="cust">Binil Baby</td><td>Neha George</td><td><a href="https://dashboard.stripe.com/invoices/in_1SwLsmCPXsXtUO9y2rbLmyEB">-0386</a></td><td class="num">5,010.00</td><td class="num">538</td><td class="num"><b>2,505.00</b></td><td><span class="badge b-med">MED</span></td><td>Draft balance; cross etch + £201 permit shortfall TBC</td></tr>
+
+    <tr><td><span class="badge b-warn">🟡 Credit</span></td><td class="cust">Helen Allen</td><td>Bernard Allen</td><td><a href="https://dashboard.stripe.com/invoices/in_1ScmsCCPXsXtUO9ydJLyLuAd">-0340</a></td><td class="num">1,661.90</td><td class="num">191.70 → 165.80</td><td class="num"><b>805.05</b></td><td><span class="badge b-hi">HIGH</span></td><td>Draft balance with −£25.90 credit</td></tr>
+    <tr><td><span class="badge b-warn">🟡 Credit</span></td><td class="cust">Keely Whailin</td><td>Irene Whailin</td><td><a href="https://dashboard.stripe.com/invoices/in_1SA8A7CPXsXtUO9yZhbkfyYM">-0226</a></td><td class="num">1,316.60</td><td class="num">305 → 70</td><td class="num"><b>423.30</b></td><td><span class="badge b-med">MED</span></td><td>Draft balance with −£235 credit (verify £305 vs £70)</td></tr>
+
+    <tr><td><span class="badge b-warn2">🟠 Revise</span></td><td class="cust">Shannon Gorton</td><td>Lukas Gorton</td><td><a href="https://dashboard.stripe.com/invoices/in_1SZt4JCPXsXtUO9ykHT6YooY">-0333</a> open</td><td class="num">1,255.00</td><td class="num">160 → 275</td><td class="num"><b>542.50</b></td><td><span class="badge b-hi">HIGH</span></td><td>Void existing -0333, recreate (−£200 credit + £115 permit add)</td></tr>
+
+    <tr><td><span class="badge b-bad">🔴 Paid</span></td><td class="cust">Philip Lunn</td><td>Joyce Mary Lunn</td><td><a href="https://dashboard.stripe.com/invoices/in_1TlRqCCPXsXtUO9yhftBtYc9">-0602</a></td><td class="num">2,035.00</td><td class="num">195</td><td class="num"><b>—</b></td><td><span class="badge b-hi">HIGH</span></td><td>Flip ClickUp Paid in Full → Yes</td></tr>
+
+    <tr><td><span class="badge b-info">⏸ Hold</span></td><td class="cust">Steph Carter</td><td>Natalie Regine Allen</td><td><a href="https://dashboard.stripe.com/invoices/in_1T55d9CPXsXtUO9y62ZsIGqs">-0418</a></td><td class="num">1,426.90</td><td class="num">TBC</td><td class="num"><b>713.45+</b></td><td><span class="badge b-med">MED</span></td><td>Wait for Polborder Methodist permit fee</td></tr>
+    <tr><td><span class="badge b-info">⏸ Hold</span></td><td class="cust">Zulfiqar Qazi</td><td>Kanza Chohan</td><td><a href="https://dashboard.stripe.com/invoices/in_1Sg9FBCPXsXtUO9yN5UDxgPG">-0350</a> open</td><td class="num">1,267.40</td><td class="num">0 vs 512.40 paid</td><td class="num"><b>—</b></td><td><span class="badge b-low">LOW</span></td><td>Chase deposit + clarify £512.40 permit</td></tr>
+    <tr><td><span class="badge b-info">⏸ Hold</span></td><td class="cust">Sherriden Lewis</td><td>Leo Aaron Sutherland</td><td>-0334 open £925 + <a href="https://dashboard.stripe.com/invoices/in_1SwNhdCPXsXtUO9y5iILUSVP">-0387</a> paid £685</td><td class="num">1,850.00</td><td class="num">0</td><td class="num"><b>685 or 925</b></td><td><span class="badge b-low">LOW</span></td><td>Void -0334, decide if −£240 credit applies to balance</td></tr>
+    <tr><td><span class="badge b-info">⏸ Hold</span></td><td class="cust">Ingrid Ransome</td><td>James Leslie Ransome</td><td><a href="https://dashboard.stripe.com/invoices/in_1SQ56CCPXsXtUO9yR4QmgmQK">-0284</a> open</td><td class="num">1,705.00</td><td class="num">160</td><td class="num"><b>852.50</b></td><td><span class="badge b-med">MED</span></td><td>Chase Ellisons solicitors for deposit</td></tr>
+    <tr><td><span class="badge b-info">⏸ Hold</span></td><td class="cust">Terry Ford</td><td>Ellie Elizabeth Ford</td><td>-0272 paid + <a href="https://dashboard.stripe.com/invoices/in_1TlozPCPXsXtUO9yTDjfbBCi">-0603</a> paid</td><td class="num">3,070.80 vs 2,310.30</td><td class="num">0 (baby grave)</td><td class="num"><b>0 or 760.50</b></td><td><span class="badge b-low">LOW</span></td><td>Confirm whether ClickUp or Stripe order value is current</td></tr>
+    <tr><td><span class="badge b-info">⏸ Hold</span></td><td class="cust">Erol Hasan</td><td>Arif Halil Hasan</td><td><a href="https://dashboard.stripe.com/invoices/in_1SIUPsCPXsXtUO9yTgdx9vVN">-0260</a> open</td><td class="num">1,840.00</td><td class="num">332 (paid separately)</td><td class="num"><b>920.00</b></td><td><span class="badge b-med">MED</span></td><td>Chase 8-month-old deposit</td></tr>
+    <tr><td><span class="badge b-info">⏸ Hold</span></td><td class="cust">Cindy Tearle</td><td>Thomas Luke Tearle</td><td><a href="https://dashboard.stripe.com/invoices/in_1SVBxBCPXsXtUO9yRjixiR17">-0306</a></td><td class="num">1,678.00</td><td class="num">£60 Res / £220 non-Res</td><td class="num"><b>839+</b></td><td><span class="badge b-med">MED</span></td><td>Confirm Eaton Bray permit, or invoice £839 + permit separately</td></tr>
+
+    <tr><td><span class="badge b-teal">✅ Settled</span></td><td class="cust">Dale Humphreys</td><td>Thomas Owen &amp; Margaret Humphreys</td><td>full upfront</td><td class="num">1,090.00</td><td class="num">122</td><td class="num">—</td><td><span class="badge b-hi">HIGH</span></td><td>Flip ClickUp Paid in Full → Yes</td></tr>
+    <tr><td><span class="badge b-teal">✅ Settled</span></td><td class="cust">Julie Willis</td><td>Celia Maureen Cornwell</td><td>full upfront</td><td class="num">1,210.00</td><td class="num">130</td><td class="num">—</td><td><span class="badge b-hi">HIGH</span></td><td>Flip ClickUp Paid in Full → Yes</td></tr>
+    <tr><td><span class="badge b-teal">✅ Settled</span></td><td class="cust">Aysha Khatun</td><td>Muhammed Mundazir Khan</td><td>full upfront £1,456</td><td class="num">1,135.00</td><td class="num">321.19</td><td class="num">—</td><td><span class="badge b-hi">HIGH</span></td><td>Flip ClickUp Paid in Full → Yes</td></tr>
+    <tr><td><span class="badge b-teal">✅ Settled</span></td><td class="cust">Tessa Newson</td><td>Jacqueline Castiello</td><td><a href="https://dashboard.stripe.com/invoices/in_1TOd8KCPXsXtUO9yjCr4CkpK">-0512</a> full</td><td class="num">1,570.00</td><td class="num">89</td><td class="num">—</td><td><span class="badge b-hi">HIGH</span></td><td>Flip ClickUp Paid in Full → Yes · 3 duplicate cus_</td></tr>
+
+    <tr><td><span class="badge b-gray">❓ Anomaly</span></td><td class="cust">Dale Ramdeen</td><td>Earlando Denzel De Bellotte</td><td>no Stripe invoice</td><td class="num">?</td><td class="num">356</td><td class="num">?</td><td><span class="badge b-low">LOW</span></td><td>£1,496 in PIs — paid outside invoicing</td></tr>
+    <tr><td><span class="badge b-gray">❓ Anomaly</span></td><td class="cust">Damali Raymond</td><td>—</td><td>no Stripe invoice</td><td class="num">?</td><td class="num">275</td><td class="num">?</td><td><span class="badge b-low">LOW</span></td><td>£1,770 PI — reconstruct order</td></tr>
+    <tr><td><span class="badge b-gray">❓ Anomaly</span></td><td class="cust">Shaun Houlahan</td><td>Benjamin Thomas Brown</td><td>external inv 000380</td><td class="num">?</td><td class="num">?</td><td class="num">?</td><td><span class="badge b-low">LOW</span></td><td>£875 one-off charge — legacy invoice?</td></tr>
+    <tr><td><span class="badge b-gray">❓ Anomaly</span></td><td class="cust">Angela Sadler</td><td>—</td><td>not in Stripe</td><td class="num">?</td><td class="num">?</td><td class="num">?</td><td><span class="badge b-low">LOW</span></td><td>Different email used?</td></tr>
+    <tr><td><span class="badge b-gray">❓ Anomaly</span></td><td class="cust">Rachel Burkey</td><td>Margaret Mary Picton</td><td>not in Stripe</td><td class="num">?</td><td class="num">600</td><td class="num">?</td><td><span class="badge b-low">LOW</span></td><td>Email not in Stripe</td></tr>
+  </tbody>
+</table>
+
+<div class="legend">
+  <span><span class="dot" style="background:var(--good)"></span> Clean — duplicate deposit, remove permit line</span>
+  <span><span class="dot" style="background:var(--warn)"></span> Permit credit adjustment</span>
+  <span><span class="dot" style="background:var(--warn-2)"></span> Existing balance invoice needs revision</span>
+  <span><span class="dot" style="background:var(--bad)"></span> Already paid — update ClickUp</span>
+  <span><span class="dot" style="background:var(--info)"></span> Hold — decision needed</span>
+  <span><span class="dot" style="background:var(--teal)"></span> Settled — paid in full at deposit</span>
+  <span><span class="dot" style="background:var(--gray)"></span> Data anomaly</span>
+</div>
+
+<!-- Per-customer cards -->
+<h2>Per-customer detail</h2>
+<div id="cards">
+
+<details class="card" data-f="green" open>
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">🟢 Janette Etheridge <small>· Dorothy Lodge</small></span>
+    <span class="num">Order <strong>£1,656.90</strong></span>
+    <span class="num col-permit">Permit <strong>£110</strong></span>
+    <span class="num col-balance">Balance <strong>£828.45</strong></span>
+    <span><span class="badge b-hi">HIGH</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor — Stripe deposit invoice</h4>
+      <dl>
+        <dt>Customer</dt><dd class="mono">cus_U39kGnet8iFBJr</dd>
+        <dt>Email</dt><dd>jetheridge@hotmail.co.uk</dd>
+        <dt>Invoice</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1T53QiCPXsXtUO9yfaXBZvGJ">-0416</a> · PAID 26 Feb 2026</dd>
+        <dt>Total</dt><dd>£938.45 = £110 permit + £828.45 mem (Total: 1656.9*0.5)</dd>
+        <dt>ClickUp task</dt><dd><a href="https://app.clickup.com/t/869c9hg6b">869c9hg6b</a> · install</dd>
+      </dl>
+      <h4>Evidence</h4>
+      <div class="quote">Approval received; "Also paid by card"<span class="who">ClickUp comment · Aylin · 3 Mar 2026</span></div>
+      <p style="color:var(--muted); font-size:12.5px; margin:8px 0 0">Gmail: no design changes.</p>
+    </div>
+    <div class="col">
+      <h4>Reconciliation</h4>
+      <dl>
+        <dt>Baseline</dt><dd>£828.45</dd>
+        <dt>Adjustments</dt><dd>none</dd>
+        <dt><b>Final balance</b></dt><dd><b>£828.45</b></dd>
+      </dl>
+      <div class="action"><strong>Action:</strong> Draft balance = duplicate -0416, delete permit line.</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="green">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">🟢 Leonard Lewis <small>· Lynnette Ebanks</small></span>
+    <span class="num">Order <strong>£1,787.50</strong></span>
+    <span class="num col-permit">Permit <strong>£588</strong> ✓</span>
+    <span class="num col-balance">Balance <strong>£893.75</strong></span>
+    <span><span class="badge b-hi">HIGH</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor</h4>
+      <dl>
+        <dt>Customer</dt><dd class="mono">cus_TPPGXhA2TZc18u</dd>
+        <dt>Email</dt><dd>leonardlewis1@hotmail.com</dd>
+        <dt>Invoice</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1SSaRyCPXsXtUO9y7ToW0zAo">-0293</a> · PAID 12 Nov 2025</dd>
+        <dt>Total</dt><dd>£1,481.75 = £588 permit + £893.75 mem</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869b4yd2f">869b4yd2f</a> · install</dd>
+      </dl>
+      <h4>Evidence</h4>
+      <div class="quote">Paid 588. Ref 3465<span class="who">ClickUp · Aylin · 5 May 2026 · perfectly reconciled with charged amount</span></div>
+    </div>
+    <div class="col">
+      <h4>Reconciliation</h4>
+      <dl>
+        <dt>Baseline</dt><dd>£893.75</dd>
+        <dt><b>Final balance</b></dt><dd><b>£893.75</b></dd>
+      </dl>
+      <div class="action"><strong>Action:</strong> Draft balance = duplicate -0293, delete permit line. Cleanest case in the set.</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="green">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">🟢 Sheara Carl Singh <small>· TBC</small></span>
+    <span class="num">Order <strong>£1,804.50</strong></span>
+    <span class="num col-permit">Permit <strong>£207</strong></span>
+    <span class="num col-balance">Balance <strong>£902.25</strong></span>
+    <span><span class="badge b-hi">HIGH</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor</h4>
+      <dl>
+        <dt>Customer</dt><dd class="mono">cus_TS5grAyDsbUnZv</dd>
+        <dt>Email</dt><dd>sheara_singh@yahoo.co.uk</dd>
+        <dt>Invoice</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1SVBV8CPXsXtUO9y7rd3xsgR">-0305</a> · PAID 19 Nov 2025</dd>
+        <dt>Total</dt><dd>£1,109.25 = £207 permit + £902.25 mem</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869b7n13n">869b7n13n</a> · install</dd>
+      </dl>
+      <p style="color:var(--muted); font-size:12.5px">Approval received via PDF (May 2026). CM hasn't paid cemetery yet (Permit Paid? = Not Yet) — doesn't affect the balance to the customer.</p>
+    </div>
+    <div class="col">
+      <h4>Reconciliation</h4>
+      <dl>
+        <dt>Baseline</dt><dd>£902.25</dd>
+        <dt><b>Final balance</b></dt><dd><b>£902.25</b></dd>
+      </dl>
+      <div class="action"><strong>Action:</strong> Draft balance = duplicate -0305, delete permit line. Confirm deceased name before sending.</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="green">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">🟢 Sharmine Goni <small>· Jasmine Sulthana Goni</small></span>
+    <span class="num">Order <strong>£1,469.50</strong></span>
+    <span class="num col-permit">Permit <strong>£240</strong></span>
+    <span class="num col-balance">Balance <strong>£734.75</strong></span>
+    <span><span class="badge b-hi">HIGH</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor</h4>
+      <dl>
+        <dt>Customer</dt><dd class="mono">cus_TkQYr8Vra6yUYG</dd>
+        <dt>Email</dt><dd>sharmine273@gmail.com</dd>
+        <dt>Invoice</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1SmvhHCPXsXtUO9ypgl3Ozcu">-0358</a> · PAID 5 Jan 2026</dd>
+        <dt>Total</dt><dd>£974.75 = £240 permit + £734.75 mem</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869bp5x2j">869bp5x2j</a></dd>
+      </dl>
+      <div class="quote">Paid 245 - Approval &amp; Receipt incoming<span class="who">ClickUp · Aylin · 9 Mar 2026</span></div>
+      <p style="color:var(--muted); font-size:12.5px">£5 permit shortfall (charged £240, paid £245) — CM absorbs.</p>
+    </div>
+    <div class="col">
+      <h4>Reconciliation</h4>
+      <dl>
+        <dt>Baseline</dt><dd>£734.75</dd>
+        <dt><b>Final balance</b></dt><dd><b>£734.75</b></dd>
+      </dl>
+      <div class="action"><strong>Action:</strong> Draft balance = duplicate -0358, delete permit line.</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="green">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">🟢 Helen Fricker <small>· Ronald Frank Mouland</small></span>
+    <span class="num">Order <strong>£1,750</strong></span>
+    <span class="num col-permit">Permit <strong>£0</strong></span>
+    <span class="num col-balance">Balance <strong>£875</strong></span>
+    <span><span class="badge b-hi">HIGH</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor</h4>
+      <dl>
+        <dt>Customer</dt><dd class="mono">cus_T8wjU4ALkHGCSH <span style="color:var(--warn-2)">(+4 duplicate cus_)</span></dd>
+        <dt>Email</dt><dd>helenshields64@btinternet.com</dd>
+        <dt>Invoice</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1SCeq4CPXsXtUO9yiXoZfN3G">-0245</a> · PAID 29 Sep 2025 · renovation</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869a77e38">869a77e38</a></dd>
+      </dl>
+      <div class="quote">Going ahead without permit — customer happy too<span class="who">ClickUp · Aylin · 3 Apr 2026</span></div>
+    </div>
+    <div class="col">
+      <h4>Reconciliation</h4>
+      <dl>
+        <dt>Baseline</dt><dd>£875</dd>
+        <dt><b>Final balance</b></dt><dd><b>£875.00</b></dd>
+      </dl>
+      <div class="action"><strong>Action:</strong> Draft balance = duplicate -0245 (permit line is £0). <em>Also</em>: clean up the 4 duplicate cus_ records for this email.</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="green">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">🟢 Leanne Smith <small>· TBC · ⚠ scope addition</small></span>
+    <span class="num">Order <strong>£3,260</strong></span>
+    <span class="num col-permit">Permit <strong>£550</strong> ✓</span>
+    <span class="num col-balance">Balance <strong>£1,630</strong></span>
+    <span><span class="badge b-med">MED</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor</h4>
+      <dl>
+        <dt>Customer</dt><dd class="mono">cus_T2fxh1Gh5lbK29</dd>
+        <dt>Email</dt><dd>leannehsmith@outlook.com</dd>
+        <dt>Invoice</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1S6ac1CPXsXtUO9yFmWoaLq3">-0220</a> · PAID 12 Sep 2025</dd>
+        <dt>Total</dt><dd>£2,180 = £550 permit + £1,630 mem</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869afc1na">869afc1na</a></dd>
+      </dl>
+      <div class="quote">Paid 550 Online (Payment ref: FS827591258)<span class="who">ClickUp · Aylin · 13 Apr 2026 — permit reconciled</span></div>
+      <div class="quote" style="border-left-color:var(--warn)">Customer wants concrete landing added to permit/scope — may affect balance invoice. Install needed by 20 May.<span class="who">ClickUp · scope change · not yet priced</span></div>
+    </div>
+    <div class="col">
+      <h4>Reconciliation</h4>
+      <dl>
+        <dt>Baseline</dt><dd>£1,630</dd>
+        <dt>Scope add</dt><dd>concrete landing — needs quote</dd>
+        <dt><b>Final balance</b></dt><dd><b>£1,630 + landing TBC</b></dd>
+      </dl>
+      <div class="action warn"><strong>Decide:</strong> draft £1,630 now and bill the landing separately, OR price the landing now and roll it in?</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="green">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">🟢 Binil Baby <small>· Neha George · ⚠ shortfall + scope</small></span>
+    <span class="num">Order <strong>£5,010</strong></span>
+    <span class="num col-permit">Permit <strong>£538 → £739</strong></span>
+    <span class="num col-balance">Balance <strong>£2,505</strong></span>
+    <span><span class="badge b-med">MED</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor</h4>
+      <dl>
+        <dt>Customer</dt><dd class="mono">cus_TuADU2rACNyZc2</dd>
+        <dt>Email</dt><dd>binilbaby91@hotmail.com</dd>
+        <dt>Invoice</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1SwLsmCPXsXtUO9y2rbLmyEB">-0386</a> · PAID 2 Dec 2025</dd>
+        <dt>Total</dt><dd>£3,043 = £538 permit + £2,505 mem</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869c030bv">869c030bv</a></dd>
+      </dl>
+      <div class="quote">Paid £739.00 (online cmg website)<span class="who">ClickUp · Aylin · 3 May 2026 — £201 above charged £538</span></div>
+      <div class="quote" style="border-left-color:var(--warn)">Customer also wants a cross etched onto memorial<span class="who">ClickUp · scope add · not priced</span></div>
+    </div>
+    <div class="col">
+      <h4>Reconciliation</h4>
+      <dl>
+        <dt>Baseline</dt><dd>£2,505</dd>
+        <dt>Permit shortfall</dt><dd>£201 — absorb or recover?</dd>
+        <dt>Scope add</dt><dd>cross etch — TBC</dd>
+        <dt><b>Final balance</b></dt><dd><b>£2,505</b> (or £2,706 if you recover permit)</dd>
+      </dl>
+      <div class="action warn"><strong>Decide:</strong> recover the £201 or absorb it; price the cross etch or bill separately.</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="yellow">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">🟡 Helen Allen <small>· Bernard Allen · permit overcharge</small></span>
+    <span class="num">Order <strong>£1,661.90</strong></span>
+    <span class="num col-permit">Permit <strong>£191.70 → £165.80</strong></span>
+    <span class="num col-balance">Balance <strong>£805.05</strong></span>
+    <span><span class="badge b-hi">HIGH</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor</h4>
+      <dl>
+        <dt>Customer</dt><dd class="mono">cus_TZwlKkdQIKzeJ9</dd>
+        <dt>Email</dt><dd>helenmallen286@gmail.com</dd>
+        <dt>Invoice</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1ScmsCCPXsXtUO9ydJLyLuAd">-0340</a> · PAID 10 Dec 2025</dd>
+        <dt>Total</dt><dd>£1,022.65 = £191.70 permit + £830.95 mem</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869bem90w">869bem90w</a></dd>
+      </dl>
+      <div class="quote">Paid 165.80 Invoice 7410442. wiv Rev.<span class="who">ClickUp · Aylin · 6 May 2026 — cemetery only charged £165.80</span></div>
+      <div class="quote">Discussion of mixed-colour infill (black &amp; grey) and silver lettering<span class="who">Gmail · 10 Dec 2025 — colour/finish change, no money impact</span></div>
+    </div>
+    <div class="col">
+      <h4>Reconciliation</h4>
+      <dl>
+        <dt>Baseline</dt><dd>£830.95</dd>
+        <dt>Permit overpayment</dt><dd>−£25.90 (191.70 − 165.80)</dd>
+        <dt><b>Final balance</b></dt><dd><b>£805.05</b></dd>
+      </dl>
+      <div class="action warn"><strong>Decide:</strong> apply as negative line on balance invoice, or separate Stripe refund against -0340?</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="yellow">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">🟡 Keely Whailin <small>· Irene Whailin · big permit overcharge</small></span>
+    <span class="num">Order <strong>£1,316.60</strong></span>
+    <span class="num col-permit">Permit <strong>£305 → £70</strong></span>
+    <span class="num col-balance">Balance <strong>£423.30</strong></span>
+    <span><span class="badge b-med">MED</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor</h4>
+      <dl>
+        <dt>Customer</dt><dd class="mono">cus_T6Kpzhor2JYrRo</dd>
+        <dt>Email</dt><dd>keelywhailin74@gmail.com</dd>
+        <dt>Invoice</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1SA8A7CPXsXtUO9yZhbkfyYM">-0226</a> · PAID 22 Sep 2025</dd>
+        <dt>Total</dt><dd>£963.30 = £305 permit + £658.30 mem</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869ajftqz">869ajftqz</a></dd>
+      </dl>
+      <div class="quote">Paid 70 on Rev. Approval incoming<span class="who">ClickUp · Aylin · 6 May 2026 · Armthorpe Parish Council — only £70 vs £305 charged</span></div>
+    </div>
+    <div class="col">
+      <h4>Reconciliation</h4>
+      <dl>
+        <dt>Baseline</dt><dd>£658.30</dd>
+        <dt>Permit overpayment</dt><dd>−£235 (305 − 70)</dd>
+        <dt><b>Final balance</b></dt><dd><b>£423.30</b></dd>
+      </dl>
+      <div class="action warn"><strong>Decide:</strong> apply as credit line, OR separate refund — and verify £305 wasn't a data error first (it's a big swing).</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="orange">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">🟠 Shannon Gorton <small>· Lukas Gorton · existing balance needs revision</small></span>
+    <span class="num">Order <strong>£1,255</strong></span>
+    <span class="num col-permit">Permit <strong>£160 → £275</strong></span>
+    <span class="num col-balance">Balance <strong>£542.50</strong></span>
+    <span><span class="badge b-hi">HIGH</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor</h4>
+      <dl>
+        <dt>Customer</dt><dd class="mono">cus_THwt18bAIiTyIi</dd>
+        <dt>Email</dt><dd>shannonpenny6@gmail.com</dd>
+        <dt>Deposit</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1SLMzzCPXsXtUO9yKRWaPWno">-0271</a> · PAID 23 Oct 2025 · £787.50 (£160 permit + £627.50 mem)</dd>
+        <dt>Existing balance</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1SZt4JCPXsXtUO9ykHT6YooY">-0333</a> · OPEN £627.50 (no permit) — incorrect</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869axydrv">869axydrv</a></dd>
+      </dl>
+      <div class="quote">Paid 275. Receipt &amp; approval incoming<span class="who">ClickUp · Aylin · 22 Mar 2026 (Stevenage / Weston Road) — £115 more than charged</span></div>
+      <div class="quote">NB: Stevie Stones is supposed 2 have paid bout 200 on her behalf. Edit 2nd invoice accordingly<span class="who">ClickUp · Aylin · 2 Feb 2026</span></div>
+    </div>
+    <div class="col">
+      <h4>Reconciliation</h4>
+      <dl>
+        <dt>Baseline</dt><dd>£627.50</dd>
+        <dt>Stevie Stones credit</dt><dd>−£200</dd>
+        <dt>Permit shortfall</dt><dd>+£115</dd>
+        <dt><b>Final balance</b></dt><dd><b>£542.50</b></dd>
+      </dl>
+      <div class="action"><strong>Action:</strong> Void -0333, draft new balance with credit + permit lines. Net £542.50.</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="red">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">🔴 Philip Lunn <small>· Joyce Mary Lunn · already paid</small></span>
+    <span class="num">Order <strong>£2,035</strong></span>
+    <span class="num col-permit">Permit <strong>£195</strong></span>
+    <span class="num col-balance">Balance <strong>£0 (paid)</strong></span>
+    <span><span class="badge b-hi">HIGH</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor</h4>
+      <dl>
+        <dt>Customer</dt><dd class="mono">cus_TnS2ddi9Qbr6XE</dd>
+        <dt>Email</dt><dd>phil.lunn@evotra.co.uk <small>(switch to philiplunn@hotmail.com going forward — per ClickUp)</small></dd>
+        <dt>Deposit</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1Spr89CPXsXtUO9yVgCl7OFP">-0366</a> · PAID 15 Dec 2025</dd>
+        <dt>Balance</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1TlRqCCPXsXtUO9yhftBtYc9">-0602</a> · PAID 24 Jun 2026</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869btnfvv">869btnfvv</a></dd>
+      </dl>
+      <div class="quote">Paid 195 fee<span class="who">ClickUp · Aylin · 4 Jun 2026 — £20 absorbed (£175 charged customer vs £195 paid cemetery)</span></div>
+    </div>
+    <div class="col">
+      <h4>Reconciliation</h4>
+      <dl>
+        <dt>Status</dt><dd>fully settled</dd>
+        <dt>Total received</dt><dd>£2,210</dd>
+      </dl>
+      <div class="action"><strong>Action:</strong> Flip ClickUp Paid in Full → Yes. No invoice needed.</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="hold">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">⏸ Steph Carter <small>· Natalie Regine Allen · permit unconfirmed</small></span>
+    <span class="num">Order <strong>£1,426.90</strong></span>
+    <span class="num col-permit">Permit <strong>TBC</strong></span>
+    <span class="num col-balance">Balance <strong>£713.45+</strong></span>
+    <span><span class="badge b-med">MED</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor</h4>
+      <dl>
+        <dt>Customer</dt><dd class="mono">cus_U3C1pE6wS3RYw2</dd>
+        <dt>Invoice</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1T55d9CPXsXtUO9y62ZsIGqs">-0418</a> · PAID 26 Feb 2026 · £713.45 (£0 permit)</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869c9m1ca">869c9m1ca</a></dd>
+      </dl>
+      <div class="quote">Add permit fee to 2nd invoice when we know<span class="who">ClickUp · Aylin · 26 Feb 2026 · Polborder Methodist still TBC</span></div>
+    </div>
+    <div class="col">
+      <h4>Hold reason</h4>
+      <p>Permit fee unknown. Could invoice £713.45 now and bill permit later, or wait.</p>
+      <div class="action warn"><strong>Recommend:</strong> chase Polborder Methodist, then send combined balance.</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="hold">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">⏸ Zulfiqar Qazi <small>· Kanza Chohan · deposit unpaid + permit mystery</small></span>
+    <span class="num">Order <strong>£1,267.40</strong></span>
+    <span class="num col-permit">Permit <strong>£0 vs £512.40</strong></span>
+    <span class="num col-balance">Balance <strong>TBD</strong></span>
+    <span><span class="badge b-low">LOW</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor</h4>
+      <dl>
+        <dt>Customer</dt><dd class="mono">cus_TdQ5IZR60Cs0bT</dd>
+        <dt>Deposit</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1Sg9FBCPXsXtUO9yN5UDxgPG">-0350</a> · <span style="color:#fca5a5"><b>OPEN/unpaid since 19 Dec 2025</b></span> · £633.70</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869bj0qcb">869bj0qcb</a> · install · urgent</dd>
+      </dl>
+      <div class="quote">Paid 512.40 Ref 50137<span class="who">ClickUp · Aylin · 3 May 2026 · Edinburgh — but customer was charged £0</span></div>
+      <p style="color:var(--muted); font-size:12.5px">Gmail: inscription wording edits only — no price change.</p>
+    </div>
+    <div class="col">
+      <h4>Hold reasons</h4>
+      <ol style="margin:0; padding-left:18px">
+        <li>Deposit -0350 6 months unpaid — chase first</li>
+        <li>£512.40 cemetery cost vs £0 charged — combined permit for multiple memorials, or true shortfall?</li>
+      </ol>
+      <div class="action bad"><strong>Action:</strong> chase deposit; confirm whether £512.40 is one memorial or several before invoicing balance.</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="hold">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">⏸ Sherriden Lewis <small>· Leo Aaron Sutherland · two deposit invoices</small></span>
+    <span class="num">Order <strong>£1,850</strong></span>
+    <span class="num col-permit">Permit <strong>£0</strong></span>
+    <span class="num col-balance">Balance <strong>£685 or £925</strong></span>
+    <span><span class="badge b-low">LOW</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor — two deposits on file</h4>
+      <dl>
+        <dt>Customer</dt><dd class="mono">cus_TXf5yCnSYrrglp</dd>
+        <dt>Invoice A</dt><dd>-0334 · OPEN £925 (no permit) — earlier</dd>
+        <dt>Invoice B</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1SwNhdCPXsXtUO9y5iILUSVP">-0387</a> · PAID £685 (£925 mem − £240 lettering credit)</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869bcqxeq">869bcqxeq</a></dd>
+      </dl>
+      <div class="quote">No Permit fee. No Patch on Bear.<span class="who">ClickUp · Aylin · 4 Dec 2025</span></div>
+      <div class="quote">Surname mismatch — Birmingham permit issued to 'Sherriden Sutherland' (Sutton New Hall) vs task 'Sherriden Lewis'<span class="who">ClickUp · needs verification</span></div>
+      <p style="color:var(--muted); font-size:12.5px">Gmail: patch on bear removed, step inscription added — explains the −£240 credit.</p>
+    </div>
+    <div class="col">
+      <h4>Hold reasons</h4>
+      <ol style="margin:0; padding-left:18px">
+        <li>Void -0334 (superseded)?</li>
+        <li>Does the £240 credit apply to balance too (→ £685) or was it deposit-only (→ £925)?</li>
+      </ol>
+      <div class="action warn"><strong>Decide:</strong> void -0334; pick £685 or £925 balance.</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="hold">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">⏸ Ingrid Ransome <small>· James Leslie Ransome · deposit unpaid 7 months</small></span>
+    <span class="num">Order <strong>£1,705</strong></span>
+    <span class="num col-permit">Permit <strong>£160</strong></span>
+    <span class="num col-balance">Balance <strong>£852.50</strong></span>
+    <span><span class="badge b-med">MED</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor</h4>
+      <dl>
+        <dt>Deposit</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1SQ56CCPXsXtUO9yR4QmgmQK">-0284</a> · <b style="color:#fca5a5">OPEN/unpaid since 5 Nov 2025</b> · £1,012.50</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869b2hrzy">869b2hrzy</a> · install</dd>
+      </dl>
+      <p style="color:var(--muted); font-size:12.5px">Solicitors Ellisons paying — fast-track requested. Once deposit paid, balance is clean £852.50.</p>
+    </div>
+    <div class="col">
+      <h4>Hold reason</h4>
+      <div class="action bad"><strong>Action:</strong> chase Ellisons solicitors for £1,012.50 deposit.</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="hold">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">⏸ Terry Ford <small>· Ellie Elizabeth Ford · £760 mystery</small></span>
+    <span class="num">Order <strong>£3,070 vs £2,310</strong></span>
+    <span class="num col-permit">Permit <strong>£0 (baby grave)</strong></span>
+    <span class="num col-balance">Balance <strong>£0 or £760.50</strong></span>
+    <span><span class="badge b-low">LOW</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor — multiple invoices</h4>
+      <dl>
+        <dt>Customer</dt><dd class="mono">cus_THwuBGDyP6g4m6</dd>
+        <dt>Deposit A</dt><dd>-0272 · PAID £1,155.15 (Total 2310.3*0.5)</dd>
+        <dt>Deposit B</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1TlozPCPXsXtUO9yTDjfbBCi">-0603</a> · PAID 24 Jun 2026 · £1,155.15 (same total)</dd>
+        <dt>Voided</dt><dd>-0308 / -0309 / -0310 (revised-spec attempts)</dd>
+        <dt>Open</dt><dd>further revised invoices at £1,915.65 / £2,113.65</dd>
+        <dt>Total received</dt><dd>£2,310.30 = full Stripe order</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869axykj7">869axykj7</a> · £3,070.80</dd>
+      </dl>
+      <div class="quote">Spoke 2 cemetery — baby grave so No Fee<span class="who">ClickUp · Aylin · 6 Nov 2025</span></div>
+      <div class="quote">Final Invoice is prepared in stripe with permit and adjusted amount at 160 letters<span class="who">ClickUp · Arin Melvin · 20 Nov 2025</span></div>
+      <div class="quote">Spec revised: Heart photo plaque + 2 pots + 160 letters (60 over standard × £2.40 = +£144)<span class="who">Gmail · 20 Nov 2025</span></div>
+    </div>
+    <div class="col">
+      <h4>Hold reason</h4>
+      <p>Customer has paid the full Stripe order (£2,310.30). ClickUp says £3,070.80. Two readings:</p>
+      <ul style="margin:6px 0">
+        <li>Stripe is current — customer owes <b>£0</b></li>
+        <li>ClickUp is current — customer owes <b>£760.50</b> for spec uplift</li>
+      </ul>
+      <div class="action warn"><strong>Decide:</strong> which is the truth?</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="hold">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">⏸ Erol Hasan <small>· Arif Halil Hasan · deposit unpaid 8 months</small></span>
+    <span class="num">Order <strong>£1,840</strong></span>
+    <span class="num col-permit">Permit <strong>£332</strong> (separate inv)</span>
+    <span class="num col-balance">Balance <strong>£920</strong></span>
+    <span><span class="badge b-med">MED</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor</h4>
+      <dl>
+        <dt>Deposit</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1SIUPsCPXsXtUO9yTgdx9vVN">-0260</a> · <b style="color:#fca5a5">OPEN/unpaid since 15 Oct 2025</b> · £920</dd>
+        <dt>Permit invoice</dt><dd>separate, paid £332</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869ardq70">869ardq70</a></dd>
+      </dl>
+      <div class="quote">Paid 332 (664 Total — together with Sherko Permit)<span class="who">ClickUp · Aylin · 9 Mar 2026</span></div>
+      <p style="color:var(--muted); font-size:12.5px">Gmail (low-conf): inscription wouldn't fit permit form box — possible extra lettering.</p>
+    </div>
+    <div class="col">
+      <h4>Hold reason</h4>
+      <div class="action bad"><strong>Action:</strong> chase deposit; verify lettering count then balance £920.</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="hold">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">⏸ Cindy Tearle <small>· Thomas Luke Tearle · permit £60 or £220?</small></span>
+    <span class="num">Order <strong>£1,678</strong></span>
+    <span class="num col-permit">Permit <strong>£60 Res / £220 non-Res</strong></span>
+    <span class="num col-balance">Balance <strong>£839+</strong></span>
+    <span><span class="badge b-med">MED</span></span>
+  </summary>
+  <div class="body">
+    <div class="col">
+      <h4>Anchor</h4>
+      <dl>
+        <dt>Deposit</dt><dd><a href="https://dashboard.stripe.com/invoices/in_1SVBxBCPXsXtUO9yRjixiR17">-0306</a> · PAID 19 Nov 2025 · £839 (£0 permit)</dd>
+        <dt>ClickUp</dt><dd><a href="https://app.clickup.com/t/869b7nmg9">869b7nmg9</a></dd>
+      </dl>
+      <div class="quote">Eaton Bray Parish Council. Permit fees noted: '£60 (Res) / £220 (non-Res)' — actual paid amount not yet confirmed<span class="who">ClickUp · Aylin · 19 Jan 2026</span></div>
+    </div>
+    <div class="col">
+      <h4>Hold reason</h4>
+      <div class="action warn"><strong>Decide:</strong> chase Eaton Bray and combine, OR invoice £839 now + permit separately later.</div>
+    </div>
+  </div>
+</details>
+
+<details class="card" data-f="ok">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">✅ Dale Humphreys <small>· Thomas Owen &amp; Margaret Humphreys</small></span>
+    <span class="num">Paid in full</span>
+    <span class="num col-permit">Permit £122</span>
+    <span class="num col-balance">—</span>
+    <span><span class="badge b-hi">HIGH</span></span>
+  </summary>
+  <div class="body"><div class="col" style="grid-column:1/3">Order £1,090 billed full upfront (`pct_to_pay = 1`). <div class="action"><strong>Action:</strong> flip ClickUp Paid in Full → Yes on <a href="https://app.clickup.com/t/869cmhga5">869cmhga5</a>.</div></div></div>
+</details>
+
+<details class="card" data-f="ok">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">✅ Julie Willis <small>· Celia Maureen Cornwell</small></span>
+    <span class="num">Paid in full</span>
+    <span class="num col-permit">Permit £130</span>
+    <span class="num col-balance">—</span>
+    <span><span class="badge b-hi">HIGH</span></span>
+  </summary>
+  <div class="body"><div class="col" style="grid-column:1/3">Renovation, billed full upfront. <div class="action"><strong>Action:</strong> flip ClickUp Paid in Full → Yes on <a href="https://app.clickup.com/t/869bhw2zw">869bhw2zw</a>.</div></div></div>
+</details>
+
+<details class="card" data-f="ok">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">✅ Aysha Khatun <small>· Muhammed Mundazir Khan</small></span>
+    <span class="num">Paid in full</span>
+    <span class="num col-permit">Permit £321.19</span>
+    <span class="num col-balance">—</span>
+    <span><span class="badge b-hi">HIGH</span></span>
+  </summary>
+  <div class="body"><div class="col" style="grid-column:1/3">Paid £1,456.19 total. <div class="action"><strong>Action:</strong> flip ClickUp Paid in Full → Yes on <a href="https://app.clickup.com/t/869a4ph4j">869a4ph4j</a>.</div></div></div>
+</details>
+
+<details class="card" data-f="ok">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">✅ Tessa Newson <small>· Jacqueline Castiello</small></span>
+    <span class="num">Paid in full</span>
+    <span class="num col-permit">Permit £89</span>
+    <span class="num col-balance">—</span>
+    <span><span class="badge b-hi">HIGH</span></span>
+  </summary>
+  <div class="body"><div class="col" style="grid-column:1/3"><a href="https://dashboard.stripe.com/invoices/in_1TOd8KCPXsXtUO9yjCr4CkpK">-0512</a> PAID 19 Apr 2026 · £1,659. Note 3 duplicate Stripe customers exist. <div class="action"><strong>Action:</strong> flip ClickUp Paid in Full → Yes on <a href="https://app.clickup.com/t/869d03aar">869d03aar</a>; clean up duplicate cus_.</div></div></div>
+</details>
+
+<details class="card" data-f="anom">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">❓ Dale Ramdeen <small>· Earlando Denzel De Bellotte</small></span>
+    <span class="num">Order ?</span>
+    <span class="num col-permit">Permit £356</span>
+    <span class="num col-balance">?</span>
+    <span><span class="badge b-low">LOW</span></span>
+  </summary>
+  <div class="body"><div class="col" style="grid-column:1/3">Stripe customer <span class="mono">cus_SGGuU3kWopLlYY</span> exists, <b>no Stripe invoices</b>. Two succeeded PaymentIntents totalling <b>£1,496.33</b> (£895.90 + £600.43). ClickUp order value missing. <div class="action bad"><strong>Action:</strong> investigate — paid outside the invoice system. Reconstruct order from sales records.</div></div></div>
+</details>
+
+<details class="card" data-f="anom">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">❓ Damali Raymond</span>
+    <span class="num">Order ?</span>
+    <span class="num col-permit">Permit £275</span>
+    <span class="num col-balance">?</span>
+    <span><span class="badge b-low">LOW</span></span>
+  </summary>
+  <div class="body"><div class="col" style="grid-column:1/3">Stripe customer <span class="mono">cus_SomBH7NxnvRW02</span>, no invoices, <b>one £1,770 PI</b>. ClickUp order value missing. ClickUp `paid_total_stripe = £1,770` mirrors the PI. <div class="action bad"><strong>Action:</strong> reconstruct order value from sales record.</div></div></div>
+</details>
+
+<details class="card" data-f="anom">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">❓ Shaun Houlahan <small>· Benjamin Thomas Brown</small></span>
+    <span class="num">Order ?</span>
+    <span class="num col-permit">?</span>
+    <span class="num col-balance">?</span>
+    <span><span class="badge b-low">LOW</span></span>
+  </summary>
+  <div class="body"><div class="col" style="grid-column:1/3">Stripe customer <span class="mono">cus_SweNF5lpd4RKrx</span>, no Stripe-native invoice. £875 one-off charge tagged "invoice 000380" (external/legacy number). <div class="action bad"><strong>Action:</strong> trace external invoice 000380.</div></div></div>
+</details>
+
+<details class="card" data-f="anom">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">❓ Angela Sadler</span>
+    <span class="num">Order ?</span>
+    <span class="num col-permit">?</span>
+    <span class="num col-balance">?</span>
+    <span><span class="badge b-low">LOW</span></span>
+  </summary>
+  <div class="body"><div class="col" style="grid-column:1/3">Not found in Stripe by email (angelasadler2000@yahoo.co.uk) or stripe_id. <div class="action bad"><strong>Action:</strong> check whether a different email was used in Stripe.</div></div></div>
+</details>
+
+<details class="card" data-f="anom">
+  <summary>
+    <span class="arrow">▶</span>
+    <span class="name">❓ Rachel Burkey <small>· Margaret Mary Picton</small></span>
+    <span class="num">Order ?</span>
+    <span class="num col-permit">Permit £600</span>
+    <span class="num col-balance">?</span>
+    <span><span class="badge b-low">LOW</span></span>
+  </summary>
+  <div class="body"><div class="col" style="grid-column:1/3">Email rachelburkey3@icloud.com not in Stripe. ClickUp permit £600 noted but no order value or invoice. <div class="action bad"><strong>Action:</strong> investigate. May predate Stripe usage.</div></div></div>
+</details>
+
+</div>
+
+<div class="footer">
+  <p><strong>Method:</strong> Stripe deposit invoice is the anchor (line with `*0.5` marker). ClickUp Permit £ is what the customer was charged; Aylin's ClickUp comment is what the cemetery actually charged — the delta is the adjustment. Gmail scanned per email for post-deposit design changes / extra lettering. <strong>GHL not loaded</strong> this session — design-change signal may be incomplete.</p>
+  <p>Generated 27 June 2026 — <code>cm-revenue-tracker</code> skill, full sweep against the 26 in-scope tasks.</p>
+</div>
+
+<script>
+  // Filter buttons
+  const buttons = document.querySelectorAll('#filters button');
+  const cards = document.querySelectorAll('#cards details.card');
+  buttons.forEach(b => b.addEventListener('click', () => {
+    buttons.forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    const f = b.dataset.f;
+    cards.forEach(c => {
+      c.style.display = (f === 'all' || c.dataset.f === f) ? '' : 'none';
+    });
+  }));
+</script>
+
+</body>
+</html>
