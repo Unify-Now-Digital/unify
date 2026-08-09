@@ -10,6 +10,41 @@
     "body_format": "html",
     "platform": "WooCommerce – Request a Quote plugin"
   },
+  "preferred_source": {
+    "channel": "woocommerce_rest",
+    "endpoint": "GET /wp-json/wc/v3/orders?search=<name|email>&per_page=20",
+    "why": "Same request lands as a structured WooCommerce order — no HTML/regex parsing of the notification email. Map from here where possible; fall back to the email 'source'/'parse_rules' only when the order is not retrievable.",
+    "order_meta": {
+      "_raq_customer_name": "requester full name",
+      "_raq_customer_email": "requester email",
+      "_raq_customer_message": "customer_message (free text)",
+      "_raq_status": "lifecycle flag (new, ...) — usable for dedupe / unprocessed filtering",
+      "_raq_request": "structured object; each field is { id, type, label, value }"
+    },
+    "field_map": {
+      "first_name": "_raq_request.first_name.value",
+      "last_name": "_raq_request.last_name.value",
+      "email": "_raq_request.email.value",
+      "phone": "_raq_request.Phone.value",
+      "grave_location": "_raq_request.Grave_Location.value",
+      "grave_number": "_raq_request.Grave_Number.value",
+      "customer_message": "_raq_request.message.value (or order meta _raq_customer_message)",
+      "quote_request_number": "order.id (or order.number)",
+      "order_value": "order.total (already numeric — no '£' strip)",
+      "created_date": "order.date_created",
+      "product_name": "order.line_items[0].name",
+      "product_sku": "order.line_items[0].sku",
+      "options": "order.line_items[0].meta_data[] — keys: 'Pick A Memorial Colour', 'Pick Lettering Colour', 'Flower Container', 'Photo Plaque', 'Garden Kerbset', 'Inscription', 'overall-height'",
+      "inscription": "order.line_items[0].meta_data[] where key == 'Inscription'"
+    },
+    "value_cleanup": {
+      "html_entities": "Line-item option values contain entities: decode '&nbsp;'->space, '&pound;'->'£'.",
+      "overage_token": "Strip the trailing '+ £<amount>' price token from option/inscription values (e.g. 'Gold  +£0.00' -> 'Gold'; inscription '... +£24.50' -> drop the '+£24.50').",
+      "ignore_keys": ["_nbo_option_price", "_ga_*", "Quantity Discount"]
+    },
+    "note": "order_type, occasion and deceased_name are still DERIVED per 'derived_fields' below — the REST source removes parsing work, not the inference gaps in 'known_gaps'.",
+    "validated_against": "Live orders #8649-#8675 via the 'CM: Lookup WooCommerce Orders' Make tool (e.g. #8675 Susan GIBNEY / sgibney85@gmail.com, SKU 16019-01, £1399.50)."
+  },
   "parse_rules": {
     "quote_request_number": "Regex: 'Request a Quote #(\\d+)'",
     "product_name": "First product row, text before the '(#SKU)' token",

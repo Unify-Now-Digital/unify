@@ -166,3 +166,66 @@ cemetery (postcode needing normalisation) — exactly the gaps noted in §4.
 > and #9984. The `customField` key form above is illustrative; when wiring this into
 > GHL via API/Make/n8n, custom fields are sent as an array of `{ id, field_value }`
 > using each field's GHL id.
+
+---
+
+## 6. Preferred data source — WooCommerce REST API (not email HTML)
+
+Sections 1–5 describe parsing the notification **email**. In practice the same
+request also lands as a **WooCommerce order** reachable over the REST API
+(`GET /wp-json/wc/v3/orders?search=<name|email>`), and that is the source you
+should map from where possible: the fields are already structured, so there is
+no HTML/regex parsing and no entity-decoding of the human-readable email.
+
+Each Request-a-Quote order carries these `meta_data` keys at the order level:
+
+| Order meta key | Contains |
+|---|---|
+| `_raq_customer_name` | Requester full name |
+| `_raq_customer_email` | Requester email |
+| `_raq_customer_message` | Free-text message (e.g. `"2 foot 6"`) |
+| `_raq_status` | Lifecycle flag (`new`, …) — useful for dedupe / "unprocessed" filtering |
+| `_raq_request` | **Structured object** with every form field (see below) |
+
+`_raq_request` holds one entry per form field, each `{ id, type, label, value }`:
+
+| `_raq_request` field | Maps to |
+|---|---|
+| `first_name.value` | Contact `firstName` |
+| `last_name.value` | Contact `lastName` |
+| `email.value` | Contact `email` (upsert key) |
+| `Phone.value` | Contact `phone` |
+| `Grave_Location.value` | `cemetery_grave_location` (still free text — same normalisation gap as §4 item 1) |
+| `Grave_Number.value` | `grave_number` |
+| `message.value` | folded into `additional_notes` |
+
+The order's own fields cover the rest:
+
+| Order / line-item field | Maps to |
+|---|---|
+| `id` / `number` | `quote_request_number` |
+| `total` | `monetaryValue` / Order value (already numeric — no `£` to strip) |
+| `date_created` | Opportunity created date |
+| `line_items[].name` | `product_name` (→ `order_type` via the §2 keyword rules) |
+| `line_items[].sku` | `product_sku` |
+| `line_items[].meta_data[]` | product options — `Pick A Memorial Colour`, `Pick Lettering Colour`, `Flower Container`, `Photo Plaque`, `Garden Kerbset`, `Inscription`, `overall-height` |
+
+**One decode step remains:** line-item option `value`s are stored with HTML
+entities and a trailing price token, e.g.
+`"Gold&nbsp;&nbsp;+&pound;0.00"` or the inscription
+`"In loving memory of … &nbsp;&nbsp;+&pound;24.50"`. Before mapping, decode
+entities (`&nbsp;`→space, `&pound;`→£) and strip the trailing `+ £<amount>`
+overage token — the same inscription/overage handling as the §2 inscription
+row, just applied to the structured value instead of an email line. Ignore the `_nbo_option_price`
+and `_ga_*` internal keys.
+
+`order_type`, `occasion`, and `deceased_name` are still **derived** exactly as in
+§2 (keyword rule / inference / inscription parse) — the REST source removes the
+*parsing* work, not the *inference* gaps of §4.
+
+> Validated against live orders #8649–#8675 via the `CM: Lookup WooCommerce
+> Orders` Make tool. Example: order #8675 → Susan GIBNEY, `sgibney85@gmail.com`,
+> `07483245456`, Grave Location `Holy Trinity Church, Hatfield Heath CM22 7EA`,
+> product `Dark Grey Ogee with Gilded rose design - 2ft 6"` (SKU `16019-01`,
+> £1,399.50), inscription for Peter Chester — all read directly from
+> `_raq_request` and `line_items`, no email parse required.
