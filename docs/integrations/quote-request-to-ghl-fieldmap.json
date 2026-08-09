@@ -1,0 +1,141 @@
+{
+  "$schema": "https://churchillmemorials.com/schemas/quote-to-ghl-fieldmap.v1.json",
+  "name": "Churchill Memorials — Request a Quote → GoHighLevel field map",
+  "version": "1.0.0",
+  "description": "Maps fields from the WooCommerce 'Request a Quote' email (sender no-reply@churchillmemorials.co.uk, subject '[Request a quote]') to GoHighLevel Contact and Opportunity records.",
+  "source": {
+    "channel": "email",
+    "from": "no-reply@churchillmemorials.co.uk",
+    "subject_match": "[Request a quote]",
+    "body_format": "html",
+    "platform": "WooCommerce – Request a Quote plugin"
+  },
+  "preferred_source": {
+    "channel": "woocommerce_rest",
+    "endpoint": "GET /wp-json/wc/v3/orders?search=<name|email>&per_page=20",
+    "why": "Same request lands as a structured WooCommerce order — no HTML/regex parsing of the notification email. Map from here where possible; fall back to the email 'source'/'parse_rules' only when the order is not retrievable.",
+    "order_meta": {
+      "_raq_customer_name": "requester full name",
+      "_raq_customer_email": "requester email",
+      "_raq_customer_message": "customer_message (free text)",
+      "_raq_status": "lifecycle flag (new, ...) — usable for dedupe / unprocessed filtering",
+      "_raq_request": "structured object; each field is { id, type, label, value }"
+    },
+    "field_map": {
+      "first_name": "_raq_request.first_name.value",
+      "last_name": "_raq_request.last_name.value",
+      "email": "_raq_request.email.value",
+      "phone": "_raq_request.Phone.value",
+      "grave_location": "_raq_request.Grave_Location.value",
+      "grave_number": "_raq_request.Grave_Number.value",
+      "customer_message": "_raq_request.message.value (or order meta _raq_customer_message)",
+      "quote_request_number": "order.id (or order.number)",
+      "order_value": "order.total (already numeric — no '£' strip)",
+      "created_date": "order.date_created",
+      "product_name": "order.line_items[0].name",
+      "product_sku": "order.line_items[0].sku",
+      "options": "order.line_items[0].meta_data[] — keys: 'Pick A Memorial Colour', 'Pick Lettering Colour', 'Flower Container', 'Photo Plaque', 'Garden Kerbset', 'Inscription', 'overall-height'",
+      "inscription": "order.line_items[0].meta_data[] where key == 'Inscription'"
+    },
+    "value_cleanup": {
+      "html_entities": "Line-item option values contain entities: decode '&nbsp;'->space, '&pound;'->'£'.",
+      "overage_token": "Strip the trailing '+ £<amount>' price token from option/inscription values (e.g. 'Gold  +£0.00' -> 'Gold'; inscription '... +£24.50' -> drop the '+£24.50').",
+      "ignore_keys": ["_nbo_option_price", "_ga_*", "Quantity Discount"]
+    },
+    "note": "order_type, occasion and deceased_name are still DERIVED per 'derived_fields' below — the REST source removes parsing work, not the inference gaps in 'known_gaps'.",
+    "validated_against": "Live orders #8649-#8675 via the 'CM: Lookup WooCommerce Orders' Make tool (e.g. #8675 Susan GIBNEY / sgibney85@gmail.com, SKU 16019-01, £1399.50)."
+  },
+  "parse_rules": {
+    "quote_request_number": "Regex: 'Request a Quote #(\\d+)'",
+    "product_name": "First product row, text before the '(#SKU)' token",
+    "product_sku": "Regex inside first product row: '\\(#([A-Za-z0-9-]+)\\)'",
+    "product_size": "Trailing dimension in product_name (e.g. '3ft', '2ft 6\"', '6FT2X2FT6')",
+    "options": "Each 'Label: Value + £ amount' line under the product row (Memorial Colour, Lettering Colour, Flower Container, Photo Plaque, Garden Kerbset, Choose infill, etc.)",
+    "inscription": "Text after 'Inscription:' up to the '+ £' charge token; preserve line breaks",
+    "customer_message": "Text under \"Customer's message\" block (optional; absent on many requests)",
+    "order_value": "Numeric value after 'Total:' — strip '£' and thousands separators",
+    "first_name": "After 'First Name :'",
+    "last_name": "After 'Last Name :' (may be empty)",
+    "email": "After 'Email :'",
+    "phone": "After 'Phone :'",
+    "grave_location": "After 'Grave Location :' (free text — postcode, address, or cemetery name; often empty)",
+    "grave_number": "After 'Grave Number :' (often empty)"
+  },
+  "derived_fields": {
+    "order_type": {
+      "from": "product_name",
+      "rules": [
+        { "if_contains_any": ["KERB", "KERBSET", "KERB SET"], "value": "Kerb Set" },
+        { "if_contains_any": ["CREMATION", "TABLET", "DESK", "BOOK"], "value": "Cremation Memorial" },
+        { "if_contains_any": ["RENOVAT", "RESTOR", "CLEAN", "ADD NAME", "ADDITIONAL"], "value": "Renovation / Additional Inscription" },
+        { "if_contains_any": ["HEADSTONE", "MEMORIAL", "-ft", "ft"], "value": "Headstone" }
+      ],
+      "default": "Headstone",
+      "note": "If a Garden Kerbset add-on is present on a headstone, append ' + Garden Kerbset' or tag separately."
+    },
+    "occasion": {
+      "from": ["inscription", "customer_message"],
+      "rules": [
+        { "if_contains_any": ["in loving memory", "sunrise", "sunset", "rest in peace", "r.i.p", "beloved", "forever in our hearts"], "value": "Memorial (bereavement)" },
+        { "if_contains_any": ["add", "additional name", "existing"], "value": "Additional inscription" }
+      ],
+      "default": "Memorial (bereavement)",
+      "note": "The website form does NOT capture an explicit occasion. This is inferred from the inscription text and should be treated as a best-guess default that the team can correct in GHL."
+    },
+    "deceased_name": {
+      "from": "inscription",
+      "rule": "Name line following 'In loving memory of' / 'In memory of' if present; else blank. The requester (Contact) is frequently NOT the deceased.",
+      "optional": true
+    }
+  },
+  "ghl_contact": {
+    "object": "contact",
+    "standard_fields": {
+      "firstName": "first_name",
+      "lastName": "last_name",
+      "email": "email",
+      "phone": "phone",
+      "source": "static: 'Website – Request a Quote'"
+    },
+    "tags": ["quote-request", "{order_type}"],
+    "custom_fields": [
+      { "key": "cemetery_grave_location", "label": "Cemetery / Grave Location", "from": "grave_location" },
+      { "key": "grave_number", "label": "Grave Number", "from": "grave_number" }
+    ]
+  },
+  "ghl_opportunity": {
+    "object": "opportunity",
+    "standard_fields": {
+      "name": "template: '{first_name} {last_name} — {order_type} (Req #{quote_request_number})'",
+      "monetaryValue": "order_value",
+      "status": "static: 'open'",
+      "pipelineId": "<Churchill Sales pipeline id>",
+      "pipelineStageId": "<'New Enquiry' stage id>",
+      "source": "static: 'Website – Request a Quote'",
+      "contactId": "<id returned from contact upsert>"
+    },
+    "custom_fields": [
+      { "key": "quote_request_number", "label": "Quote Request #", "from": "quote_request_number" },
+      { "key": "order_type", "label": "Order Type", "from": "order_type" },
+      { "key": "product_name", "label": "Product", "from": "product_name" },
+      { "key": "product_sku", "label": "Product SKU", "from": "product_sku" },
+      { "key": "memorial_colour", "label": "Memorial Colour", "from": "options.Pick A Memorial Colour" },
+      { "key": "lettering_colour", "label": "Lettering Colour", "from": "options.Pick Lettering Colour" },
+      { "key": "photo_plaque", "label": "Photo Plaque", "from": "options.Photo Plaque" },
+      { "key": "occasion", "label": "Occasion", "from": "occasion" },
+      { "key": "inscription", "label": "Inscription", "from": "inscription" },
+      { "key": "deceased_name", "label": "Deceased Name", "from": "deceased_name" },
+      { "key": "additional_notes", "label": "Additional Notes", "from": "concat: customer_message + all remaining product options" }
+    ]
+  },
+  "upsert_strategy": {
+    "contact": "Upsert on email (fallback phone). Do not overwrite non-empty existing standard fields.",
+    "opportunity": "Create one opportunity per quote request; dedupe on quote_request_number to avoid duplicates on retries."
+  },
+  "known_gaps": [
+    "Website form has no explicit 'Cemetery' field — 'Grave Location' is free text (postcode / address / cemetery name / blank) and needs normalisation before it is a reliable cemetery value.",
+    "Website form has no 'Occasion' field — occasion is inferred from the inscription and defaults to 'Memorial (bereavement)'.",
+    "Last Name is sometimes empty (e.g. Req #9982). Opportunity naming must tolerate a missing last name.",
+    "Order value is the customer-configured WooCommerce total and is a starting figure only — it is NOT the final quoted price and excludes any cemetery permit fee."
+  ]
+}
